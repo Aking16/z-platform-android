@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Z_Platform</string>
+
+    <!-- Navigation Strings -->
+    <string name="nav_home">Home</string>
+    <string name="nav_profile">Profile</string>
+    <string name="nav_notification">Notification</string>
+    <string name="nav_logout">Logout</string>
+</resources>

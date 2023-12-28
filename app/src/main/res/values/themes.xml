@@ -1,0 +1,15 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.Z_Platform" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your light theme here. -->
+        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <item name="colorPrimary">@color/dark_primary</item>
+        <item name="colorSecondary">@color/dark_secondary</item>
+        <item name="android:colorForeground">@color/dark_foreground</item>
+
+        <item name="android:windowBackground">@color/dark_primary</item>
+        <item name="android:textColor">@color/dark_foreground</item>
+    </style>
+
+    <style name="Theme.Z_Platform" parent="Base.Theme.Z_Platform" />
+</resources>
