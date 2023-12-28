@@ -4,10 +4,13 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.bumptech.glide.Glide;
 
 import java.util.List;
 
@@ -34,6 +37,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PosterHolder> 
         holder.username.setText(post.getUsername());
         holder.body.setText(post.getBody());
         holder.createdAt.setText(post.getCreatedAt());
+        Glide.with(context).load(post.getProfileImage()).into(holder.profileImage);
     }
 
     @Override
@@ -43,6 +47,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PosterHolder> 
 
     public class PosterHolder extends RecyclerView.ViewHolder {
         TextView name, username, body, createdAt;
+        ImageView profileImage;
 
         public PosterHolder(@NonNull View itemView) {
             super(itemView);
@@ -51,6 +56,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PosterHolder> 
             username = itemView.findViewById(R.id.username);
             body = itemView.findViewById(R.id.body);
             createdAt = itemView.findViewById(R.id.createdAt);
+            profileImage = itemView.findViewById(R.id.profileImage);
         }
     }
 }

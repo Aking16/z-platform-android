@@ -98,17 +98,17 @@ public class MainActivity extends AppCompatActivity {
                                 JSONObject user = jsonObject.getJSONObject("user");
                                 String name = user.getString("name");
                                 String username = user.getString("username");
+                                String profileImage = user.getString("profileImage");
                                 String body = jsonObject.getString("body");
                                 String createdAt = jsonObject.getString("createdAt");
 
-                                Post post = new Post(body, name, username, createdAt);
+                                Post post = new Post(body, name, username, profileImage, createdAt);
                                 postList.add(post);
                             } catch (JSONException e) {
                                 e.printStackTrace();
                             }
 
                             PostAdapter adapter = new PostAdapter(MainActivity.this , postList);
-
                             recyclerView.setAdapter(adapter);
                         }
                     }
