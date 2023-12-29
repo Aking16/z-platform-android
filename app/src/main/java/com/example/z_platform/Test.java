@@ -38,15 +38,15 @@ public class Test extends AppCompatActivity {
         edtPost = findViewById(R.id.edtPost);
 
         SharedPreferences sh = getSharedPreferences("LoginInfo", MODE_PRIVATE);
-        String s1 = sh.getString("userId", "");
+        String userId = sh.getString("userId", "");
 
-        txtUserId.setText(s1);
+        txtUserId.setText(userId);
 
         HashMap data = new HashMap();
 
         btnSubmit.setOnClickListener(view -> {
             data.put("body", edtPost.getText().toString());
-            data.put("userId", s1);
+            data.put("userId", userId);
 
             String url = "http://192.168.1.103:3000/api/posts";
             postData(url, data);

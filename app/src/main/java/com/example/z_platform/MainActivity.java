@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.ActionBar;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.ActionProvider;
@@ -20,7 +21,9 @@ import android.view.MenuItem;
 import android.view.SubMenu;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.android.volley.DefaultRetryPolicy;
@@ -30,12 +33,15 @@ import com.android.volley.Response;
 import com.android.volley.RetryPolicy;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.bumptech.glide.Glide;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -44,7 +50,10 @@ public class MainActivity extends AppCompatActivity {
     RecyclerView recyclerView;
     RequestQueue requestQueue;
     List<Post> postList;
+    EditText edtPost;
     ImageButton btnMenu;
+    Button btnSubmitPost;
+    ImageView profileImagePost;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,23 +64,38 @@ public class MainActivity extends AppCompatActivity {
         drawerLayout = findViewById(R.id.navMenu);
         recyclerView = findViewById(R.id.recyclerview);
         btnMenu = findViewById(R.id.menuBtn);
+        btnSubmitPost = findViewById(R.id.btnSubmitPost);
+        profileImagePost = findViewById(R.id.profileImagePost);
+        edtPost = findViewById(R.id.edtPost);
 
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         requestQueue = VolleySingleton.getmInstance(this).getRequestQueue();
-
         postList = new ArrayList<>();
-        fetchPosts();
+
+        SharedPreferences sh = getSharedPreferences("LoginInfo", MODE_PRIVATE);
+        String userId = sh.getString("userId", "");
+
+        HashMap data = new HashMap();
+        data.put("userId", userId);
 
         btnMenu.setOnClickListener(view -> {
             drawerLayout.openDrawer(GravityCompat.START);
         });
 
+        btnSubmitPost.setOnClickListener(view -> {
+            data.put("body", edtPost.getText().toString());
+            data.put("userId", userId);
 
+            postTweet(data);
+        });
+
+        fetchCurrentUser(data);
+        fetchPosts();
     }
 
-    public void hideSystemBar(){
+    public void hideSystemBar() {
         View decorView = getWindow().getDecorView();
 
         int uiOptions = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
@@ -84,7 +108,7 @@ public class MainActivity extends AppCompatActivity {
         decorView.setSystemUiVisibility(uiOptions);
     }
 
-    private void fetchPosts() {
+    public void fetchPosts() {
         String url = "http://192.168.1.103:3000/api/posts";
 
         JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, url, null,
@@ -92,7 +116,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onResponse(JSONArray response) {
 
-                        for (int i = 0 ; i < response.length() ; i ++){
+                        for (int i = 0; i < response.length(); i++) {
                             try {
                                 JSONObject jsonObject = response.getJSONObject(i);
                                 JSONObject user = jsonObject.getJSONObject("user");
@@ -108,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
                                 e.printStackTrace();
                             }
 
-                            PostAdapter adapter = new PostAdapter(MainActivity.this , postList);
+                            PostAdapter adapter = new PostAdapter(MainActivity.this, postList);
                             recyclerView.setAdapter(adapter);
                         }
                     }
@@ -137,5 +161,49 @@ public class MainActivity extends AppCompatActivity {
         });
 
         requestQueue.add(jsonArrayRequest);
+    }
+
+    private void fetchCurrentUser(HashMap data) {
+        String url = "http://192.168.1.103:3000/api/current";
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(data),
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            String profileImage = response.getString("profileImage");
+
+                            Glide.with(MainActivity.this).load(profileImage).into(profileImagePost);
+                        } catch (JSONException e) {
+                            Toast.makeText(MainActivity.this, e.toString(), Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(MainActivity.this, error.toString(), Toast.LENGTH_SHORT).show();
+            }
+        });
+        requestQueue.add(jsonObjectRequest);
+    }
+
+    public void postTweet(HashMap data) {
+        String url = "http://192.168.1.103:3000/api/posts";
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(data),
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        Toast.makeText(MainActivity.this, response.toString(), Toast.LENGTH_SHORT).show();
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(MainActivity.this, error.toString(), Toast.LENGTH_SHORT).show();
+                    }
+                }
+        );
+        requestQueue.add(jsonObjectRequest);
     }
 }
