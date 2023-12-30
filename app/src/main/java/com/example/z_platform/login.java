@@ -5,8 +5,11 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -28,21 +31,18 @@ import java.util.Map;
 
 public class login extends AppCompatActivity {
     RequestQueue requestQueue;
-    EditText edtEmail, edtPassword;
-    Button btnSubmit;
+    Button btnLogin;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
+        btnLogin = findViewById(R.id.btnLogin);
+
         requestQueue = VolleySingleton.getmInstance(this).getRequestQueue();
         SharedPreferences sh = getSharedPreferences("LoginInfo", MODE_PRIVATE);
         String userId = sh.getString("userId", "");
-
-        edtEmail = findViewById(R.id.edtEmail);
-        edtPassword = findViewById(R.id.edtPassword);
-        btnSubmit = findViewById(R.id.btnSubmit);
 
         HashMap data = new HashMap();
         ApiHandler apiHandler = new ApiHandler(getApplicationContext());
@@ -53,11 +53,28 @@ public class login extends AppCompatActivity {
             finish();
         }
 
-        btnSubmit.setOnClickListener(view -> {
-            data.put("email", edtEmail.getText().toString());
-            data.put("password", edtPassword.getText().toString());
-
-            apiHandler.signin(data);
+        btnLogin.setOnClickListener(view -> {
+            LoginDialog.display(getSupportFragmentManager());
         });
+
+//        btnSubmit.setOnClickListener(view -> {
+//            data.put("email", edtEmail.getText().toString());
+//            data.put("password", edtPassword.getText().toString());
+//
+//            apiHandler.signin(data);
+//        });
+
+        hideSystemBar();
+    }
+
+    public void hideSystemBar() {
+        if (Build.VERSION.SDK_INT < 16) {
+            getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                    WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        } else {
+            View decorView = getWindow().getDecorView();
+            int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
+            decorView.setSystemUiVisibility(uiOptions);
+        }
     }
 }

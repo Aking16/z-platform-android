@@ -126,10 +126,9 @@ public class ApiHandler {
                             String userId = response.getString("id");
 
                             SharedPreferences sharedPreferences = mContext.getSharedPreferences("LoginInfo", Context.MODE_PRIVATE);
-                            SharedPreferences.Editor myEdit = sharedPreferences.edit();
+                            SharedPreferences.Editor editor = sharedPreferences.edit();
 
-                            myEdit.putString("userId", userId);
-                            myEdit.apply();
+                            editor.putString("userId", userId).apply();
 
                             Toast.makeText(mContext, "Logged In!", Toast.LENGTH_SHORT).show();
                         } catch (JSONException e) {

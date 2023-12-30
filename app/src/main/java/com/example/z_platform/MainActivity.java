@@ -1,5 +1,6 @@
 package com.example.z_platform;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -9,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -25,6 +27,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.bumptech.glide.Glide;
+import com.google.android.material.navigation.NavigationView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -36,6 +39,7 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     DrawerLayout drawerLayout;
+    NavigationView navigationView;
     RecyclerView recyclerView;
     RequestQueue requestQueue;
     List<Post> postList;
@@ -51,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
         hideSystemBar();
 
         drawerLayout = findViewById(R.id.navMenu);
+        navigationView = findViewById(R.id.navigationView);
         recyclerView = findViewById(R.id.recyclerview);
         btnMenu = findViewById(R.id.menuBtn);
         btnSubmitPost = findViewById(R.id.btnSubmitPost);
@@ -63,6 +68,7 @@ public class MainActivity extends AppCompatActivity {
         requestQueue = VolleySingleton.getmInstance(this).getRequestQueue();
         postList = new ArrayList<>();
         ApiHandler apiHandler = new ApiHandler(getApplicationContext());
+        NavigationViewHandler navigationViewHandler = new NavigationViewHandler(this);
 
         SharedPreferences sh = getSharedPreferences("LoginInfo", MODE_PRIVATE);
         String userId = sh.getString("userId", "");
@@ -73,6 +79,8 @@ public class MainActivity extends AppCompatActivity {
         btnMenu.setOnClickListener(view -> {
             drawerLayout.openDrawer(GravityCompat.START);
         });
+
+        navigationView.setNavigationItemSelectedListener(navigationViewHandler);
 
         btnSubmitPost.setOnClickListener(view -> {
             data.put("body", edtPost.getText().toString());
@@ -86,11 +94,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void hideSystemBar() {
-        if (Build.VERSION.SDK_INT < 16){
+        if (Build.VERSION.SDK_INT < 16) {
             getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                     WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        }
-        else {
+        } else {
             View decorView = getWindow().getDecorView();
             int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
             decorView.setSystemUiVisibility(uiOptions);
