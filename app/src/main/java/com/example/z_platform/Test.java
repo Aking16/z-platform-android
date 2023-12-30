@@ -43,14 +43,19 @@ public class Test extends AppCompatActivity {
         txtUserId.setText(userId);
 
         HashMap data = new HashMap();
+//        data.put("body", edtPost.getText().toString());
+//        data.put("userId", userId);
+//
+//        String url = "http://192.168.1.103:3000/api/posts";
+//        postData(url, data);
 
         btnSubmit.setOnClickListener(view -> {
-            data.put("body", edtPost.getText().toString());
-            data.put("userId", userId);
-
-            String url = "http://192.168.1.103:3000/api/posts";
-            postData(url, data);
+            openDialog();
         });
+    }
+
+    private void openDialog() {
+        EditDialog.display(getSupportFragmentManager());
     }
 
     public void postData(String url, HashMap data) {

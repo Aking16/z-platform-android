@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -36,48 +37,27 @@ public class login extends AppCompatActivity {
         setContentView(R.layout.activity_login);
 
         requestQueue = VolleySingleton.getmInstance(this).getRequestQueue();
+        SharedPreferences sh = getSharedPreferences("LoginInfo", MODE_PRIVATE);
+        String userId = sh.getString("userId", "");
 
         edtEmail = findViewById(R.id.edtEmail);
         edtPassword = findViewById(R.id.edtPassword);
         btnSubmit = findViewById(R.id.btnSubmit);
 
         HashMap data = new HashMap();
-        data.put("email", edtEmail.getText().toString());
-        data.put("password", edtPassword.getText().toString());
-        String url = "http://192.168.1.103:3000/api/signin";
+        ApiHandler apiHandler = new ApiHandler(getApplicationContext());
+
+        if (!userId.isEmpty()) {
+            Intent intent = new Intent(login.this, MainActivity.class);
+            startActivity(intent);
+            finish();
+        }
 
         btnSubmit.setOnClickListener(view -> {
-            postData(url, data);
+            data.put("email", edtEmail.getText().toString());
+            data.put("password", edtPassword.getText().toString());
+
+            apiHandler.signin(data);
         });
-    }
-
-    public void postData(String url, HashMap data) {
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(data),
-                new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        try {
-                            String userId = response.getString("id");
-
-                            SharedPreferences sharedPreferences = getSharedPreferences("LoginInfo", MODE_PRIVATE);
-                            SharedPreferences.Editor myEdit = sharedPreferences.edit();
-
-                            myEdit.putString("userId", userId);
-                            myEdit.apply();
-
-                            Toast.makeText(login.this, userId, Toast.LENGTH_SHORT).show();
-                        } catch (JSONException e) {
-                            Toast.makeText(login.this, e.toString(), Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(login.this, error.toString(), Toast.LENGTH_SHORT).show();
-                    }
-                }
-        );
-        requestQueue.add(jsonObjectRequest);
     }
 }

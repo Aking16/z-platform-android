@@ -43,8 +43,7 @@ public class Post {
     }
 
     public static String dateFormatter(String date) {
-        OffsetDateTime inst = OffsetDateTime.ofInstant(Instant.parse(date),
-                ZoneId.systemDefault());
+        OffsetDateTime inst = OffsetDateTime.ofInstant(Instant.parse(date), ZoneId.systemDefault());
 
         return (DateTimeFormatter.ofPattern("MMM dd, yyyy").format(inst));
     }
