@@ -27,5 +27,12 @@
         <item name="android:windowExitAnimation">@anim/slide_down</item>
     </style>
 
+    <style name="MyTextInputLayout_overlay">
+        <item name="colorOnSurface">@color/dark_muted</item>
+        <item name="colorPrimary">@color/dark_secondary</item>
+        <item name="boxStrokeColor">@color/dark_secondary</item>
+    </style>
+
+
     <style name="Theme.Z_Platform" parent="Base.Theme.Z_Platform" />
 </resources>

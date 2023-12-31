@@ -46,18 +46,18 @@
             android:background="@color/border"
             app:layout_constraintTop_toBottomOf="@+id/textView2" />
 
-        <ImageView
+        <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/profileImagePost"
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:layout_marginStart="10dp"
             android:layout_marginTop="6dp"
-            android:src="@drawable/outline_person_24"
+            app:shapeAppearanceOverlay="@style/Circular"
             app:layout_constraintBottom_toBottomOf="@+id/edtPost"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@+id/edtPost">
 
-        </ImageView>
+        </com.google.android.material.imageview.ShapeableImageView>
 
         <EditText
             android:id="@+id/edtPost"

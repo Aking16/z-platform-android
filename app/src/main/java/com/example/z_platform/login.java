@@ -31,7 +31,7 @@ import java.util.Map;
 
 public class login extends AppCompatActivity {
     RequestQueue requestQueue;
-    Button btnLogin;
+    Button btnLogin, btnSignUp;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,13 +39,11 @@ public class login extends AppCompatActivity {
         setContentView(R.layout.activity_login);
 
         btnLogin = findViewById(R.id.btnLogin);
+        btnSignUp = findViewById(R.id.btnSignUp);
 
         requestQueue = VolleySingleton.getmInstance(this).getRequestQueue();
         SharedPreferences sh = getSharedPreferences("LoginInfo", MODE_PRIVATE);
         String userId = sh.getString("userId", "");
-
-        HashMap data = new HashMap();
-        ApiHandler apiHandler = new ApiHandler(getApplicationContext());
 
         if (!userId.isEmpty()) {
             Intent intent = new Intent(login.this, MainActivity.class);
@@ -57,12 +55,9 @@ public class login extends AppCompatActivity {
             LoginDialog.display(getSupportFragmentManager());
         });
 
-//        btnSubmit.setOnClickListener(view -> {
-//            data.put("email", edtEmail.getText().toString());
-//            data.put("password", edtPassword.getText().toString());
-//
-//            apiHandler.signin(data);
-//        });
+        btnSignUp.setOnClickListener(view -> {
+            SignUpDialog.display(getSupportFragmentManager());
+        });
 
         hideSystemBar();
     }

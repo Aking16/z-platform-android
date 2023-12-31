@@ -7,6 +7,8 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
@@ -27,6 +29,8 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.bumptech.glide.Glide;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.navigation.NavigationBarView;
 import com.google.android.material.navigation.NavigationView;
 
 import org.json.JSONArray;
@@ -40,6 +44,7 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
     DrawerLayout drawerLayout;
     NavigationView navigationView;
+    BottomNavigationView bottomNavigationView;
     RecyclerView recyclerView;
     RequestQueue requestQueue;
     List<Post> postList;
@@ -52,10 +57,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        hideSystemBar();
 
         drawerLayout = findViewById(R.id.navMenu);
         navigationView = findViewById(R.id.navigationView);
+        bottomNavigationView = findViewById(R.id.bottomNavigationView);
         recyclerView = findViewById(R.id.recyclerview);
         btnMenu = findViewById(R.id.menuBtn);
         btnSubmitPost = findViewById(R.id.btnSubmitPost);
@@ -69,6 +74,7 @@ public class MainActivity extends AppCompatActivity {
         postList = new ArrayList<>();
         ApiHandler apiHandler = new ApiHandler(getApplicationContext());
         NavigationViewHandler navigationViewHandler = new NavigationViewHandler(this);
+        BtmNavigationViewHandler btmNavigationViewHandler = new BtmNavigationViewHandler(this);
 
         SharedPreferences sh = getSharedPreferences("LoginInfo", MODE_PRIVATE);
         String userId = sh.getString("userId", "");
@@ -81,6 +87,8 @@ public class MainActivity extends AppCompatActivity {
         });
 
         navigationView.setNavigationItemSelectedListener(navigationViewHandler);
+        bottomNavigationView.setOnItemSelectedListener(btmNavigationViewHandler);
+        bottomNavigationView.getMenu().findItem(R.id.btmNav_home).setChecked(true);
 
         btnSubmitPost.setOnClickListener(view -> {
             data.put("body", edtPost.getText().toString());
@@ -91,6 +99,7 @@ public class MainActivity extends AppCompatActivity {
 
         apiHandler.fetchPosts(postList, recyclerView);
         apiHandler.fetchCurrentUser(data, profileImagePost);
+        hideSystemBar();
     }
 
     public void hideSystemBar() {

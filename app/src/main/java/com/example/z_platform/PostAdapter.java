@@ -1,6 +1,8 @@
 package com.example.z_platform;
 
 import android.content.Context;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,7 +39,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PosterHolder> 
         holder.username.setText(post.getUsername());
         holder.body.setText(post.getBody());
         holder.createdAt.setText(post.getCreatedAt());
-        Glide.with(context).load(post.getProfileImage()).into(holder.profileImage);
+        Glide.with(context).load(post.getProfileImage()).placeholder(R.color.dark_secondary).into(holder.profileImage);
     }
 
     @Override

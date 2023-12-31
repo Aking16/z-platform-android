@@ -30,7 +30,8 @@
 
         <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginTop="20dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -45,12 +46,12 @@
                     android:id="@+id/textView11"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Connect to world,"
+                    android:text="Create your account,"
                     android:textSize="25sp"
                     android:textStyle="bold" />
 
                 <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/edtLayoutEmailLogin"
+                    android:id="@+id/edtLayoutNameSignUp"
                     style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -58,7 +59,39 @@
                     android:theme="@style/MyTextInputLayout_overlay">
 
                     <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/edtEmailLogin"
+                        android:id="@+id/edtNameSignUp"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Name" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/edtLayoutUsernameSignUp"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="30dp"
+                    android:theme="@style/MyTextInputLayout_overlay">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/edtUsernameSignUp"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Username" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/edtLayoutEmailSignUp"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="30dp"
+                    android:theme="@style/MyTextInputLayout_overlay">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/edtEmailSignUp"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="Email" />
@@ -66,7 +99,7 @@
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/edtLayoutPasswordLogin"
+                    android:id="@+id/edtLayoutPasswordSignUp"
                     style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -75,10 +108,28 @@
                     app:passwordToggleEnabled="true">
 
                     <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/edtPasswordLogin"
+                        android:id="@+id/edtPasswordSignUp"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="Password"
+                        android:inputType="textPassword"
+                        android:textColorHint="@color/dark_foreground" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/edtLayoutPasswordConfSignUp"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:theme="@style/MyTextInputLayout_overlay"
+                    app:passwordToggleEnabled="true">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/edtPasswordConfSignUp"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Confirm Password"
                         android:inputType="textPassword"
                         android:textColorHint="@color/dark_foreground" />
                 </com.google.android.material.textfield.TextInputLayout>
@@ -89,7 +140,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="40dp"
                     android:background="@drawable/btn_secondary_default"
-                    android:text="Login" />
+                    android:text="Create account" />
             </LinearLayout>
         </ScrollView>
     </androidx.constraintlayout.widget.ConstraintLayout>

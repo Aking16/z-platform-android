@@ -3,9 +3,7 @@ package com.example.z_platform;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -13,11 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
@@ -28,20 +22,20 @@ import com.google.android.material.textfield.TextInputLayout;
 
 import java.util.HashMap;
 
-public class LoginDialog extends DialogFragment {
+public class SignUpDialog extends DialogFragment {
     public static final String TAG = "editDialog";
     private Toolbar toolbar;
     private Dialog dialog;
-    private TextInputLayout edtLayoutEmail, edtLayoutPassword;
-    private TextInputEditText edtEmail, edtPassword;
+    private TextInputLayout edtLayoutName, edtLayoutUsername, edtLayoutEmail, edtLayoutPassword, edtLayoutPasswordConf;
+    private TextInputEditText edtName, edtUsername, edtEmail, edtPassword, edtPasswordConf;
     private Button btnLogin;
     private Context mContext;
     public ApiHandler apiHandler;
     public HashMap data = new HashMap();
     private String userId;
 
-    public static LoginDialog display(FragmentManager fragmentManager) {
-        LoginDialog editDialog = new LoginDialog();
+    public static SignUpDialog display(FragmentManager fragmentManager) {
+        SignUpDialog editDialog = new SignUpDialog();
         editDialog.show(fragmentManager, TAG);
         return editDialog;
     }
@@ -69,18 +63,24 @@ public class LoginDialog extends DialogFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
-        View view = inflater.inflate(R.layout.login_dialog, container, false);
+        View view = inflater.inflate(R.layout.signup_dialog, container, false);
 
         mContext = getContext();
 
         toolbar = view.findViewById(R.id.toolbar);
         btnLogin = view.findViewById(R.id.btnLogin);
 
-        edtEmail = view.findViewById(R.id.edtEmailLogin);
-        edtPassword = view.findViewById(R.id.edtPasswordLogin);
+        edtName = view.findViewById(R.id.edtNameSignUp);
+        edtUsername = view.findViewById(R.id.edtUsernameSignUp);
+        edtEmail = view.findViewById(R.id.edtEmailSignUp);
+        edtPassword = view.findViewById(R.id.edtPasswordSignUp);
+        edtPasswordConf = view.findViewById(R.id.edtPasswordConfSignUp);
 
-        edtLayoutEmail = view.findViewById(R.id.edtLayoutEmailLogin);
-        edtLayoutPassword = view.findViewById(R.id.edtLayoutPasswordLogin);
+        edtLayoutName = view.findViewById(R.id.edtLayoutNameSignUp);
+        edtLayoutUsername = view.findViewById(R.id.edtLayoutUsernameSignUp);
+        edtLayoutEmail = view.findViewById(R.id.edtLayoutEmailSignUp);
+        edtLayoutPassword = view.findViewById(R.id.edtLayoutPasswordSignUp);
+        edtLayoutPasswordConf = view.findViewById(R.id.edtLayoutPasswordConfSignUp);
 
         apiHandler = new ApiHandler(mContext);
 
@@ -92,29 +92,48 @@ public class LoginDialog extends DialogFragment {
         super.onViewCreated(view, savedInstanceState);
 
         toolbar.setNavigationOnClickListener(v -> dismiss());
-        toolbar.setTitle("Sign in to Z!");
+        toolbar.setTitle("Sign up to Z!");
+
+        edtName.setOnFocusChangeListener((v, b) -> {
+            validator(1);
+            btnLogin.setEnabled(false);
+        });
+
+        edtUsername.setOnFocusChangeListener((v, b) -> {
+            validator(2);
+            btnLogin.setEnabled(false);
+        });
 
         edtEmail.setOnFocusChangeListener((v, b) -> {
-            validator(1);
-            btnLogin.setEnabled(true);
+            validator(3);
+            btnLogin.setEnabled(false);
         });
 
         edtPassword.setOnFocusChangeListener((v, b) -> {
-            validator(2);
-            btnLogin.setEnabled(true);
+            validator(4);
+            btnLogin.setEnabled(false);
+        });
+
+        edtPasswordConf.setOnFocusChangeListener((v, b) -> {
+            validator(5);
+            btnLogin.setEnabled(false);
         });
 
         btnLogin.setOnClickListener(v -> {
+            String name = edtName.getText().toString();
+            String username = edtUsername.getText().toString().trim();
             String email = edtEmail.getText().toString().trim();
             String password = edtPassword.getText().toString().trim();
 
-            if (!validator(1) && !validator(2)) {
+            if (!validator(1) && !validator(2)
+                    && !validator(3) && !validator(4) && !validator(5)) {
                 btnLogin.setEnabled(false);
             } else {
-                btnLogin.setEnabled(true);
+                data.put("name", name);
+                data.put("username", username);
                 data.put("email", email);
                 data.put("password", password);
-                apiHandler.signin(data, new VolleyCallback() {
+                apiHandler.register(data, new VolleyCallback() {
                     @Override
                     public void onSuccess(String result) {
                         Activity activity = (Activity) mContext;
@@ -141,13 +160,33 @@ public class LoginDialog extends DialogFragment {
     }
 
     public boolean validator(int validateID) {
+        String name = edtName.getText().toString();
+        String username = edtUsername.getText().toString().trim();
         String email = edtEmail.getText().toString().trim();
         String password = edtPassword.getText().toString().trim();
+        String passwordConf = edtPasswordConf.getText().toString().trim();
 
-        /* validateID 1 Email validator || validateID 2 = Password validator */
+        /* validateID 1 = Name validator || validateID 2 = Username validator || validateID 3 = Email validator
+        validateID 4 = Password validator || validateID 5 = Password Confirmation validator */
 
         switch (validateID) {
             case 1:
+                if (name.isEmpty()) {
+                    edtLayoutName.setError("Please write your name!");
+                } else {
+                    edtLayoutName.setErrorEnabled(false);
+                    return true;
+                }
+                break;
+            case 2:
+                if (username.isEmpty()) {
+                    edtLayoutUsername.setError("Please write your username!");
+                } else {
+                    edtLayoutUsername.setErrorEnabled(false);
+                    return true;
+                }
+                break;
+            case 3:
                 if (email.isEmpty()) {
                     edtLayoutEmail.setError("Please write your email!");
                 } else if (!email.matches("[a-zA-Z0-9._-]+@[a-z]+.[a-z]+")) {
@@ -157,11 +196,21 @@ public class LoginDialog extends DialogFragment {
                     return true;
                 }
                 break;
-            case 2:
+            case 4:
                 if (password.isEmpty()) {
                     edtLayoutPassword.setError("Please write your password!");
                 } else {
                     edtLayoutPassword.setErrorEnabled(false);
+                    return true;
+                }
+                break;
+            case 5:
+                if (passwordConf.isEmpty()) {
+                    edtLayoutPasswordConf.setError("Please write your password confirmation!");
+                } else if (!passwordConf.equals(password)) {
+                    edtLayoutPasswordConf.setError("Password confirmation doesn't match the password");
+                } else {
+                    edtLayoutPasswordConf.setErrorEnabled(false);
                     return true;
                 }
                 break;

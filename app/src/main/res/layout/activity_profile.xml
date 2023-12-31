@@ -74,7 +74,6 @@
             android:layout_height="80dp"
             android:layout_marginStart="10dp"
             android:scaleType="fitCenter"
-            android:src="@drawable/ic_launcher_background"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="@+id/coverImage"
             app:layout_constraintHorizontal_bias="0.02"
@@ -236,6 +235,7 @@
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <com.google.android.material.navigation.NavigationView
+        android:id="@+id/navigationView"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="start"

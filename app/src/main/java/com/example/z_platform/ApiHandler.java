@@ -2,6 +2,7 @@ package com.example.z_platform;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -31,7 +32,8 @@ import java.util.List;
 public class ApiHandler {
     RequestQueue requestQueue;
     Context mContext;
-    public ApiHandler(Context context){
+
+    public ApiHandler(Context context) {
         mContext = context;
         requestQueue = VolleySingleton.getmInstance(context).getRequestQueue();
     }
@@ -83,7 +85,7 @@ public class ApiHandler {
                         try {
                             String profileImage = response.getString("profileImage");
 
-                            Glide.with(mContext).load(profileImage).into(profileImagePost);
+                            Glide.with(mContext).load(profileImage).placeholder(R.color.dark_secondary).into(profileImagePost);
                         } catch (JSONException e) {
                             Toast.makeText(mContext, e.toString(), Toast.LENGTH_SHORT).show();
                         }
@@ -96,6 +98,7 @@ public class ApiHandler {
         });
         requestQueue.add(jsonObjectRequest);
     }
+
     public void postTweet(HashMap data) {
         String url = "http://192.168.1.103:3000/api/posts";
 
@@ -115,7 +118,8 @@ public class ApiHandler {
         );
         requestQueue.add(jsonObjectRequest);
     }
-    public void signin(HashMap data) {
+
+    public void signin(HashMap data, VolleyCallback callback) {
         String url = "http://192.168.1.103:3000/api/signin";
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(data),
@@ -128,18 +132,53 @@ public class ApiHandler {
                             SharedPreferences sharedPreferences = mContext.getSharedPreferences("LoginInfo", Context.MODE_PRIVATE);
                             SharedPreferences.Editor editor = sharedPreferences.edit();
 
-                            editor.putString("userId", userId).apply();
-
-                            Toast.makeText(mContext, "Logged In!", Toast.LENGTH_SHORT).show();
+                            if (!userId.isEmpty()) {
+                                editor.putString("userId", userId).apply();
+                                callback.onSuccess("Success");
+                                Toast.makeText(mContext, "Logged In!", Toast.LENGTH_SHORT).show();
+                            }
                         } catch (JSONException e) {
-                            Toast.makeText(mContext, e.toString(), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(mContext, "We couldn't log you in!", Toast.LENGTH_SHORT).show();
                         }
                     }
                 },
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(mContext, error.toString(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(mContext, "We couldn't log you in!", Toast.LENGTH_SHORT).show();
+                    }
+                }
+        );
+        requestQueue.add(jsonObjectRequest);
+    }
+
+    public void register(HashMap data, VolleyCallback callback) {
+        String url = "http://192.168.1.103:3000/api/register";
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(data),
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            String userId = response.getString("id");
+
+                            SharedPreferences sharedPreferences = mContext.getSharedPreferences("LoginInfo", Context.MODE_PRIVATE);
+                            SharedPreferences.Editor editor = sharedPreferences.edit();
+
+                            if (!userId.isEmpty()) {
+                                editor.putString("userId", userId).apply();
+                                callback.onSuccess("Success");
+                                Toast.makeText(mContext, "Logged In!", Toast.LENGTH_SHORT).show();
+                            }
+                        } catch (JSONException e) {
+                            Toast.makeText(mContext, "We couldn't log you in!", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(mContext, "We couldn't log you in!", Toast.LENGTH_SHORT).show();
                     }
                 }
         );
