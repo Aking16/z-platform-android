@@ -108,10 +108,6 @@ public class profile extends AppCompatActivity {
             EditDialog.display(getSupportFragmentManager());
         });
 
-        profileImage.setOnClickListener(view -> {
-            ProfileImageDialog.display(getSupportFragmentManager());
-        });
-
         apiHandler.fetchPosts(postList, recyclerView);
         fetchUser(data);
         hideSystemBar();

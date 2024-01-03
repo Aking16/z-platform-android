@@ -2,30 +2,36 @@ package com.example.z_platform;
 
 import static android.app.Activity.RESULT_OK;
 
+import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
-import androidx.loader.content.CursorLoader;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -33,11 +39,13 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.bumptech.glide.Glide;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 
 public class EditDialog extends DialogFragment {
     public static final String TAG = "editDialog";
@@ -47,11 +55,15 @@ public class EditDialog extends DialogFragment {
     private EditText edtProfileName, edtProfileUsername, edtProfileBio;
     private ImageView profileImage, coverImage;
     private Context mContext;
+    Activity activity;
     public ApiHandler apiHandler;
     public HashMap data = new HashMap();
     private String userId;
-    static final int PICK_IMAGE_REQUEST = 1;
-    String filePath;
+    private static final int REQUEST_PERMISSIONS = 100;
+    private static final int PICK_IMAGE_REQUEST = 1;
+    private Bitmap bitmap;
+    private String filePath;
+    int urlDirector;
 
     public static EditDialog display(FragmentManager fragmentManager) {
         EditDialog editDialog = new EditDialog();
@@ -85,6 +97,7 @@ public class EditDialog extends DialogFragment {
         View view = inflater.inflate(R.layout.edit_dialog, container, false);
 
         mContext = getContext();
+        activity = (Activity) mContext;
 
         requestQueue = VolleySingleton.getmInstance(mContext).getRequestQueue();
 
@@ -129,6 +142,12 @@ public class EditDialog extends DialogFragment {
         });
 
         profileImage.setOnClickListener(v -> {
+            urlDirector = 1;
+            imageBrowse();
+        });
+
+        coverImage.setOnClickListener(v -> {
+            urlDirector = 2;
             imageBrowse();
         });
     }
@@ -160,7 +179,9 @@ public class EditDialog extends DialogFragment {
 
                             edtProfileName.setText(name);
                             edtProfileUsername.setText(username);
-                            if (!bio.equals("null")) {edtProfileBio.setText(bio);}
+                            if (!bio.equals("null")) {
+                                edtProfileBio.setText(bio);
+                            }
                             Glide.with(mContext).load(profileImageURL).placeholder(R.color.dark_secondary).into(profileImage);
                             Glide.with(mContext).load(coverImageURL).placeholder(R.color.dark_secondary).into(coverImage);
                         } catch (JSONException e) {
@@ -177,31 +198,115 @@ public class EditDialog extends DialogFragment {
     }
 
     private void imageBrowse() {
-        Intent galleryIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        // Start the Intent
-        startActivityForResult(galleryIntent, PICK_IMAGE_REQUEST);
+        if ((ContextCompat.checkSelfPermission(mContext,
+                android.Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) && (ContextCompat.checkSelfPermission(mContext,
+                android.Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)) {
+            if ((ActivityCompat.shouldShowRequestPermissionRationale(activity,
+                    android.Manifest.permission.WRITE_EXTERNAL_STORAGE)) && (ActivityCompat.shouldShowRequestPermissionRationale(activity,
+                    android.Manifest.permission.READ_EXTERNAL_STORAGE))) {
+
+            } else {
+                ActivityCompat.requestPermissions(activity,
+                        new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE, android.Manifest.permission.READ_EXTERNAL_STORAGE},
+                        REQUEST_PERMISSIONS);
+            }
+        } else {
+            Intent intent = new Intent();
+            intent.setType("image/*");
+            intent.setAction(Intent.ACTION_GET_CONTENT);
+            startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE_REQUEST);
+        }
     }
 
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == RESULT_OK) {
-            if(requestCode == PICK_IMAGE_REQUEST){
-                Uri picUri = data.getData();
-                filePath = getPath(picUri);
-                profileImage.setImageURI(picUri);
+    public void onActivityResult(int requestCode, int resultCode, Intent dataIntent) {
+        super.onActivityResult(requestCode, resultCode, dataIntent);
+        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && dataIntent != null && dataIntent.getData() != null) {
+            Uri picUri = dataIntent.getData();
+            filePath = getPath(picUri);
+            data.put("userId", userId);
+            fetchUser(data);
+            if (filePath != null) {
+                try {
+                    bitmap = MediaStore.Images.Media.getBitmap(mContext.getContentResolver(), picUri);
+                    uploadBitmap(bitmap);
+                    profileImage.setImageBitmap(bitmap);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                Toast.makeText(activity, "no image selected", Toast.LENGTH_LONG).show();
             }
         }
     }
 
-    // Get Path of selected image
-    private String getPath(Uri contentUri) {
-        String[] proj = { MediaStore.Images.Media.DATA };
-        CursorLoader loader = new CursorLoader(mContext.getApplicationContext(),    contentUri, proj, null, null, null);
-        Cursor cursor = loader.loadInBackground();
-        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+    public String getPath(Uri uri) {
+        Cursor cursor = mContext.getContentResolver().query(uri, null, null, null, null);
         cursor.moveToFirst();
-        String result = cursor.getString(column_index);
+        String document_id = cursor.getString(0);
+        document_id = document_id.substring(document_id.lastIndexOf(":") + 1);
         cursor.close();
-        return result;
+
+        cursor = mContext.getContentResolver().query(
+                android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                null, MediaStore.Images.Media._ID + " = ? ", new String[]{document_id}, null);
+        cursor.moveToFirst();
+        @SuppressLint("Range") String path = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
+        cursor.close();
+
+        return path;
+    }
+
+    public byte[] getFileDataFromDrawable(Bitmap bitmap) {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 80, byteArrayOutputStream);
+        return byteArrayOutputStream.toByteArray();
+    }
+
+    private void uploadBitmap(final Bitmap bitmap) {
+        String url = null;
+        if (urlDirector == 1) {
+            url = "http://192.168.1.103:3000/api/edit/profileImage";
+        } else if (urlDirector == 2) {
+            url = "http://192.168.1.103:3000/api/edit/coverImage";
+        }
+
+        VolleyMultipartRequest volleyMultipartRequest = new VolleyMultipartRequest(Request.Method.PATCH, url,
+                new Response.Listener<NetworkResponse>() {
+                    @Override
+                    public void onResponse(NetworkResponse response) {
+                        if (urlDirector == 1) {
+                            Toast.makeText(activity, "Profile Image successfully edited!", Toast.LENGTH_SHORT).show();
+                        } else if (urlDirector == 2) {
+                            Toast.makeText(activity, "Cover Image successfully edited!", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(activity, "We couldn't edit your Profile Image.", Toast.LENGTH_SHORT).show();
+                    }
+                }) {
+            @Override
+            protected Map<String, DataPart> getByteData() {
+                Map<String, DataPart> params = new HashMap<>();
+                long imagename = System.currentTimeMillis();
+                if (urlDirector == 1) {
+                    params.put("profileImage", new DataPart(imagename + ".png", getFileDataFromDrawable(bitmap)));
+                } else if (urlDirector == 2) {
+                    params.put("coverImage", new DataPart(imagename + ".png", getFileDataFromDrawable(bitmap)));
+                }
+                return params;
+            }
+
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> params = new HashMap<>();
+                params.put("userId", userId);
+                return params;
+            }
+        };
+
+        requestQueue.add(volleyMultipartRequest);
     }
 }
