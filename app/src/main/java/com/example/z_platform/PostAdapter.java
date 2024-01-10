@@ -1,8 +1,10 @@
 package com.example.z_platform;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,6 +12,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -19,10 +22,12 @@ import java.util.List;
 public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PosterHolder> {
     private Context context;
     private List<Post> postList;
+    private String postId;
 
-    public PostAdapter(Context context, List<Post> posts){
+    public PostAdapter(Context context, List<Post> posts, String postId){
         this.context = context;
         postList = posts;
+        this.postId = postId;
     }
 
     @NonNull
@@ -40,6 +45,18 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PosterHolder> 
         holder.body.setText(post.getBody());
         holder.createdAt.setText(post.getCreatedAt());
         Glide.with(context).load(post.getProfileImage()).placeholder(R.color.dark_secondary).into(holder.profileImage);
+
+        holder.layout.setOnClickListener(view -> {
+            Intent intent = new Intent(context , PostActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+            Bundle bundle = new Bundle();
+            bundle.putString("postId" , postId);
+
+            intent.putExtras(bundle);
+
+            context.startActivity(intent);
+        });
     }
 
     @Override
@@ -50,6 +67,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PosterHolder> 
     public class PosterHolder extends RecyclerView.ViewHolder {
         TextView name, username, body, createdAt;
         ImageView profileImage;
+        ConstraintLayout layout;
 
         public PosterHolder(@NonNull View itemView) {
             super(itemView);
@@ -59,6 +77,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PosterHolder> 
             body = itemView.findViewById(R.id.body);
             createdAt = itemView.findViewById(R.id.createdAt);
             profileImage = itemView.findViewById(R.id.profileImage);
+            layout = itemView.findViewById(R.id.main_layout);
         }
     }
 }

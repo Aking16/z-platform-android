@@ -52,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
     ImageButton btnMenu;
     Button btnSubmitPost;
     ImageView profileImagePost;
-
+    ApiHandler apiHandler;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -72,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
 
         requestQueue = VolleySingleton.getmInstance(this).getRequestQueue();
         postList = new ArrayList<>();
-        ApiHandler apiHandler = new ApiHandler(getApplicationContext());
+        apiHandler = new ApiHandler(getApplicationContext());
         NavigationViewHandler navigationViewHandler = new NavigationViewHandler(this);
         BtmNavigationViewHandler btmNavigationViewHandler = new BtmNavigationViewHandler(this);
 
@@ -94,10 +94,15 @@ public class MainActivity extends AppCompatActivity {
             data.put("body", edtPost.getText().toString());
             data.put("userId", userId);
 
-            apiHandler.postTweet(data);
+            apiHandler.postTweet(data, new VolleyCallback<String>() {
+                @Override
+                public void onSuccess(String result) {
+                    apiHandler.fetchPosts(postList, recyclerView, "", "");
+                }
+            });
         });
 
-        apiHandler.fetchPosts(postList, recyclerView);
+        apiHandler.fetchPosts(postList, recyclerView, "", "");
         apiHandler.fetchCurrentUser(data, profileImagePost);
         hideSystemBar();
     }

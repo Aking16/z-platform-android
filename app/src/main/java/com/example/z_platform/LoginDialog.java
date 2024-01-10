@@ -114,7 +114,7 @@ public class LoginDialog extends DialogFragment {
                 btnLogin.setEnabled(true);
                 data.put("email", email);
                 data.put("password", password);
-                apiHandler.signin(data, new VolleyCallback() {
+                apiHandler.signin(data, new VolleyCallback<String>() {
                     @Override
                     public void onSuccess(String result) {
                         Activity activity = (Activity) mContext;

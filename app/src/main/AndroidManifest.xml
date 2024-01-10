@@ -18,16 +18,16 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
         <activity
+            android:name=".PostActivity"
+            android:exported="false" />
+        <activity
             android:name=".profile"
             android:exported="true"
-            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar">
-        </activity>
+            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"></activity>
         <activity
             android:name=".Test"
             android:exported="true"
-            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar">
-
-        </activity>
+            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"></activity>
         <activity
             android:name=".login"
             android:exported="true"

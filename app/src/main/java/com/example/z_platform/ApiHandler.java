@@ -1,5 +1,6 @@
 package com.example.z_platform;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
@@ -32,14 +33,23 @@ import java.util.List;
 public class ApiHandler {
     RequestQueue requestQueue;
     Context mContext;
+    String ip;
 
     public ApiHandler(Context context) {
         mContext = context;
         requestQueue = VolleySingleton.getmInstance(context).getRequestQueue();
+        ip = context.getString(R.string.ip);
     }
 
-    public void fetchPosts(List<Post> postList, RecyclerView recyclerView) {
-        String url = "http://192.168.1.103:3000/api/posts";
+    public void fetchPosts(List<Post> postList, RecyclerView recyclerView, String postId, String userId) {
+        String url;
+        if (!postId.isEmpty()) {
+            url = ip + "api/posts?postId=" + postId;
+        } else if (!userId.isEmpty()) {
+            url = ip + "api/posts?userId=" + userId;
+        } else {
+            url = ip + "api/posts";
+        }
 
         JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, url, null,
                 new Response.Listener<JSONArray>() {
@@ -53,17 +63,18 @@ public class ApiHandler {
                                 String name = user.getString("name");
                                 String username = user.getString("username");
                                 String profileImage = user.getString("profileImage");
+                                String postId = jsonObject.getString("id");
                                 String body = jsonObject.getString("body");
                                 String createdAt = jsonObject.getString("createdAt");
 
                                 Post post = new Post(body, name, username, profileImage, createdAt);
                                 postList.add(post);
+
+                                PostAdapter adapter = new PostAdapter(mContext, postList, postId);
+                                recyclerView.setAdapter(adapter);
                             } catch (JSONException e) {
                                 e.printStackTrace();
                             }
-
-                            PostAdapter adapter = new PostAdapter(mContext, postList);
-                            recyclerView.setAdapter(adapter);
                         }
                     }
                 }, new Response.ErrorListener() {
@@ -76,7 +87,7 @@ public class ApiHandler {
     }
 
     public void fetchCurrentUser(HashMap data, ImageView profileImagePost) {
-        String url = "http://192.168.1.103:3000/api/current";
+        String url = ip + "api/current";
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(data),
                 new Response.Listener<JSONObject>() {
@@ -99,14 +110,15 @@ public class ApiHandler {
         requestQueue.add(jsonObjectRequest);
     }
 
-    public void postTweet(HashMap data) {
-        String url = "http://192.168.1.103:3000/api/posts";
+    public void postTweet(HashMap data, VolleyCallback callback) {
+        String url = ip + "api/posts";
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(data),
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
                         Toast.makeText(mContext, "Post Created!", Toast.LENGTH_SHORT).show();
+                        callback.onSuccess("Success");
                     }
                 },
                 new Response.ErrorListener() {
@@ -120,7 +132,7 @@ public class ApiHandler {
     }
 
     public void signin(HashMap data, VolleyCallback callback) {
-        String url = "http://192.168.1.103:3000/api/signin";
+        String url = ip + "api/signin";
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(data),
                 new Response.Listener<JSONObject>() {
@@ -153,7 +165,7 @@ public class ApiHandler {
     }
 
     public void register(HashMap data, VolleyCallback callback) {
-        String url = "http://192.168.1.103:3000/api/register";
+        String url = ip + "api/register";
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(data),
                 new Response.Listener<JSONObject>() {
@@ -186,7 +198,7 @@ public class ApiHandler {
     }
 
     public void editUser(HashMap data) {
-        String url = "http://192.168.1.103:3000/api/edit";
+        String url = ip + "api/edit";
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.PATCH, url, new JSONObject(data),
                 new Response.Listener<JSONObject>() {

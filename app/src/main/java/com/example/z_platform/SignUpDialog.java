@@ -133,7 +133,7 @@ public class SignUpDialog extends DialogFragment {
                 data.put("username", username);
                 data.put("email", email);
                 data.put("password", password);
-                apiHandler.register(data, new VolleyCallback() {
+                apiHandler.register(data, new VolleyCallback<String>() {
                     @Override
                     public void onSuccess(String result) {
                         Activity activity = (Activity) mContext;

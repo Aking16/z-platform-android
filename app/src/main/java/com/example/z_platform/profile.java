@@ -53,6 +53,7 @@ public class profile extends AppCompatActivity {
     TextView txtName, txtUsername, txtBio, txtJoinedAt, txtFollowLength, txtFollowerLength, txtTitle;
     ImageButton btnMenu, btnBack;
     Button btnEditProfile;
+    String ip;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -74,6 +75,7 @@ public class profile extends AppCompatActivity {
         btnMenu = findViewById(R.id.menuBtn);
         btnBack = findViewById(R.id.btnBack);
         btnEditProfile = findViewById(R.id.btnEditProfile);
+        ip = getString(R.string.ip);
 
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -108,9 +110,15 @@ public class profile extends AppCompatActivity {
             EditDialog.display(getSupportFragmentManager());
         });
 
-        apiHandler.fetchPosts(postList, recyclerView);
+        apiHandler.fetchPosts(postList, recyclerView, "", "");
         fetchUser(data);
         hideSystemBar();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Toast.makeText(this, "Resume", Toast.LENGTH_SHORT).show();
     }
 
     public void hideSystemBar() {
@@ -126,7 +134,7 @@ public class profile extends AppCompatActivity {
     }
 
     public void fetchUser(HashMap data) {
-        String url = "http://192.168.1.103:3000/api/user";
+        String url = ip + "api/user";
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(data),
                 new Response.Listener<JSONObject>() {

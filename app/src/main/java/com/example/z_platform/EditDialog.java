@@ -64,6 +64,7 @@ public class EditDialog extends DialogFragment {
     private Bitmap bitmap;
     private String filePath;
     int urlDirector;
+    String ip;
 
     public static EditDialog display(FragmentManager fragmentManager) {
         EditDialog editDialog = new EditDialog();
@@ -98,6 +99,7 @@ public class EditDialog extends DialogFragment {
 
         mContext = getContext();
         activity = (Activity) mContext;
+        ip = getString(R.string.ip);
 
         requestQueue = VolleySingleton.getmInstance(mContext).getRequestQueue();
 
@@ -163,40 +165,6 @@ public class EditDialog extends DialogFragment {
         }
     }
 
-    private void fetchUser(HashMap data) {
-        String url = "http://192.168.1.103:3000/api/user";
-
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(data),
-                new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        try {
-                            String name = response.getString("name");
-                            String username = response.getString("username");
-                            String bio = response.getString("bio");
-                            String profileImageURL = response.getString("profileImage");
-                            String coverImageURL = response.getString("coverImage");
-
-                            edtProfileName.setText(name);
-                            edtProfileUsername.setText(username);
-                            if (!bio.equals("null")) {
-                                edtProfileBio.setText(bio);
-                            }
-                            Glide.with(mContext).load(profileImageURL).placeholder(R.color.dark_secondary).into(profileImage);
-                            Glide.with(mContext).load(coverImageURL).placeholder(R.color.dark_secondary).into(coverImage);
-                        } catch (JSONException e) {
-                            Toast.makeText(mContext, e.toString(), Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Toast.makeText(getContext(), error.toString(), Toast.LENGTH_SHORT).show();
-            }
-        });
-        requestQueue.add(jsonObjectRequest);
-    }
-
     private void imageBrowse() {
         if ((ContextCompat.checkSelfPermission(mContext,
                 android.Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) && (ContextCompat.checkSelfPermission(mContext,
@@ -223,13 +191,16 @@ public class EditDialog extends DialogFragment {
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && dataIntent != null && dataIntent.getData() != null) {
             Uri picUri = dataIntent.getData();
             filePath = getPath(picUri);
-            data.put("userId", userId);
-            fetchUser(data);
             if (filePath != null) {
                 try {
                     bitmap = MediaStore.Images.Media.getBitmap(mContext.getContentResolver(), picUri);
-                    uploadBitmap(bitmap);
-                    profileImage.setImageBitmap(bitmap);
+                    uploadBitmap(bitmap, new VolleyCallback<String>() {
+                        @Override
+                        public void onSuccess(String result) {
+                            data.put("userId", userId);
+                            fetchUser(data);
+                        }
+                    });
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -262,12 +233,12 @@ public class EditDialog extends DialogFragment {
         return byteArrayOutputStream.toByteArray();
     }
 
-    private void uploadBitmap(final Bitmap bitmap) {
+    private void uploadBitmap(final Bitmap bitmap, VolleyCallback callback) {
         String url = null;
         if (urlDirector == 1) {
-            url = "http://192.168.1.103:3000/api/edit/profileImage";
+            url = ip + "api/edit/profileImage";
         } else if (urlDirector == 2) {
-            url = "http://192.168.1.103:3000/api/edit/coverImage";
+            url = ip + "api/edit/coverImage";
         }
 
         VolleyMultipartRequest volleyMultipartRequest = new VolleyMultipartRequest(Request.Method.PATCH, url,
@@ -279,6 +250,7 @@ public class EditDialog extends DialogFragment {
                         } else if (urlDirector == 2) {
                             Toast.makeText(activity, "Cover Image successfully edited!", Toast.LENGTH_SHORT).show();
                         }
+                        callback.onSuccess("Success");
                     }
                 },
                 new Response.ErrorListener() {
@@ -308,5 +280,39 @@ public class EditDialog extends DialogFragment {
         };
 
         requestQueue.add(volleyMultipartRequest);
+    }
+
+    private void fetchUser(HashMap data) {
+        String url = ip + "api/user";
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(data),
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            String name = response.getString("name");
+                            String username = response.getString("username");
+                            String bio = response.getString("bio");
+                            String profileImageURL = response.getString("profileImage");
+                            String coverImageURL = response.getString("coverImage");
+
+                            edtProfileName.setText(name);
+                            edtProfileUsername.setText(username);
+                            if (!bio.equals("null")) {
+                                edtProfileBio.setText(bio);
+                            }
+                            Glide.with(mContext).load(profileImageURL).placeholder(R.color.dark_secondary).into(profileImage);
+                            Glide.with(mContext).load(coverImageURL).placeholder(R.color.dark_secondary).into(coverImage);
+                        } catch (JSONException e) {
+                            Toast.makeText(mContext, e.toString(), Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(getContext(), error.toString(), Toast.LENGTH_SHORT).show();
+            }
+        });
+        requestQueue.add(jsonObjectRequest);
     }
 }
