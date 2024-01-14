@@ -52,6 +52,11 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PosterHolder> 
 
             Bundle bundle = new Bundle();
             bundle.putString("postId" , postId);
+            bundle.putString("name" , post.getName());
+            bundle.putString("username" , post.getUsername());
+            bundle.putString("body" , post.getBody());
+            bundle.putString("createdAt" , post.getCreatedAt());
+            bundle.putString("profileImage" , post.getProfileImage());
 
             intent.putExtras(bundle);
 
