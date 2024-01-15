@@ -110,7 +110,7 @@ public class profile extends AppCompatActivity {
             EditDialog.display(getSupportFragmentManager());
         });
 
-        apiHandler.fetchPosts(postList, recyclerView, "", "");
+        apiHandler.fetchPosts(postList, recyclerView, "");
         fetchUser(data);
         hideSystemBar();
     }

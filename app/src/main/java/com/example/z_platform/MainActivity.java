@@ -92,17 +92,16 @@ public class MainActivity extends AppCompatActivity {
 
         btnSubmitPost.setOnClickListener(view -> {
             data.put("body", edtPost.getText().toString());
-            data.put("userId", userId);
 
             apiHandler.postTweet(data, new VolleyCallback<String>() {
                 @Override
                 public void onSuccess(String result) {
-                    apiHandler.fetchPosts(postList, recyclerView, "", "");
+                    apiHandler.fetchPosts(postList, recyclerView, "");
                 }
             });
         });
 
-        apiHandler.fetchPosts(postList, recyclerView, "", "");
+        apiHandler.fetchPosts(postList, recyclerView, "");
         apiHandler.fetchCurrentUser(data, profileImagePost);
         hideSystemBar();
     }

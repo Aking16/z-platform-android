@@ -41,11 +41,9 @@ public class ApiHandler {
         ip = context.getString(R.string.ip);
     }
 
-    public void fetchPosts(List<Post> postList, RecyclerView recyclerView, String postId, String userId) {
+    public void fetchPosts(List<Post> postList, RecyclerView recyclerView, String userId) {
         String url;
-        if (!postId.isEmpty()) {
-            url = ip + "api/posts?postId=" + postId;
-        } else if (!userId.isEmpty()) {
+        if (!userId.isEmpty()) {
             url = ip + "api/posts?userId=" + userId;
         } else {
             url = ip + "api/posts";
@@ -55,7 +53,6 @@ public class ApiHandler {
                 new Response.Listener<JSONArray>() {
                     @Override
                     public void onResponse(JSONArray response) {
-
                         for (int i = 0; i < response.length(); i++) {
                             try {
                                 JSONObject jsonObject = response.getJSONObject(i);
@@ -84,6 +81,67 @@ public class ApiHandler {
             }
         });
         requestQueue.add(jsonArrayRequest);
+    }
+
+    public void fetchComments(List<Comment> commentList, RecyclerView recyclerView, String postId) {
+        String url = ip + "api/posts?postId=" + postId;
+
+        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, url, null,
+                new Response.Listener<JSONArray>() {
+                    @Override
+                    public void onResponse(JSONArray response) {
+                        for (int i = 0; i < response.length(); i++) {
+                            try {
+                                JSONObject jsonObject = response.getJSONObject(i);
+                                JSONObject user = jsonObject.getJSONObject("user");
+                                JSONArray comments = jsonObject.getJSONArray("comments");
+
+                                for (int a = 0; a < comments.length(); a++) {
+                                    JSONObject commentTest = comments.getJSONObject(a);
+                                    String body = commentTest.getString("body");
+                                    String createdAt = commentTest.getString("createdAt");
+
+                                    String name = user.getString("name");
+                                    String username = user.getString("username");
+                                    String profileImage = user.getString("profileImage");
+                                    String commentId = jsonObject.getString("id");
+
+                                    Comment comment = new Comment(body, name, username, profileImage, createdAt);
+                                    commentList.add(comment);
+                                }
+
+                                CommentAdapter adapter = new CommentAdapter(mContext, commentList);
+                                recyclerView.setAdapter(adapter);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(mContext, error.toString(), Toast.LENGTH_SHORT).show();
+            }
+        });
+        requestQueue.add(jsonArrayRequest);
+    }
+
+    public void postComments(HashMap data) {
+        String url = ip + "api/comments";
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(data),
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        Toast.makeText(mContext, "Comment Added!", Toast.LENGTH_SHORT).show();
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(mContext, error.toString(), Toast.LENGTH_SHORT).show();
+            }
+        });
+        requestQueue.add(jsonObjectRequest);
     }
 
     public void fetchCurrentUser(HashMap data, ImageView profileImagePost) {
