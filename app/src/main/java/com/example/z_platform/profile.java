@@ -6,6 +6,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
@@ -54,6 +55,8 @@ public class profile extends AppCompatActivity {
     ImageButton btnMenu, btnBack;
     Button btnEditProfile;
     String ip;
+    Boolean isFollowing = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -86,11 +89,15 @@ public class profile extends AppCompatActivity {
         NavigationViewHandler navigationViewHandler = new NavigationViewHandler(this);
         BtmNavigationViewHandler btmNavigationViewHandler = new BtmNavigationViewHandler(this);
 
-        SharedPreferences sh = getSharedPreferences("LoginInfo", MODE_PRIVATE);
-        String userId = sh.getString("userId", "");
+        SharedPreferences sh = getSharedPreferences("LoginInfo", Context.MODE_PRIVATE);
+        String shUserId = sh.getString("userId", "");
+
+        Bundle bundle = getIntent().getExtras();
+        String userId = bundle.getString("userId");
 
         HashMap data = new HashMap();
-        data.put("userId", userId);
+        data.put("followerId", shUserId);
+        data.put("followId", userId);
 
         btnMenu.setOnClickListener(view -> {
             drawerLayout.openDrawer(GravityCompat.START);
@@ -106,34 +113,59 @@ public class profile extends AppCompatActivity {
             finish();
         });
 
-        btnEditProfile.setOnClickListener(view -> {
-            EditDialog.display(getSupportFragmentManager());
+        if (!userId.equals(shUserId)) {
+            btnEditProfile.setText("Follow");
+            btnEditProfile.setOnClickListener(view -> {
+                apiHandler.follow(data, result -> {
+                    btnEditProfile.setText("Following");
+                    btnEditProfile.setBackgroundColor(getColor(R.color.dark_foreground));
+                });
+            });
+        } else {
+            btnEditProfile.setOnClickListener(view -> {
+                EditDialog.display(getSupportFragmentManager());
+            });
+        }
+
+        apiHandler.fetchCurrentUser(shUserId, result -> {
+            try {
+                JSONArray followingIds = result.getJSONArray("followingIds");
+                if (followingIds.toString().contains(userId)) {
+                    btnEditProfile.setText("Following");
+                    btnEditProfile.setBackground(getDrawable(R.drawable.btn_white));
+                    btnEditProfile.setTextColor(getColor(R.color.dark_primary));
+                    btnEditProfile.setOnClickListener(view -> {
+                        apiHandler.unFollow(data, result1 -> {
+                            btnEditProfile.setText("Follow");
+                            btnEditProfile.setBackground(getDrawable(R.drawable.btn_primary));
+                            btnEditProfile.setTextColor(getColor(R.color.dark_foreground));
+                        });
+                    });
+                }
+            } catch (JSONException e) {
+                throw new RuntimeException(e);
+            }
         });
 
-        apiHandler.fetchPosts(postList, recyclerView, "");
-        fetchUser(data);
+        apiHandler.fetchPosts(postList, recyclerView, userId);
+        fetchUser(userId);
         hideSystemBar();
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        Toast.makeText(this, "Resume", Toast.LENGTH_SHORT).show();
-    }
-
     public void hideSystemBar() {
-        if (Build.VERSION.SDK_INT < 16){
+        if (Build.VERSION.SDK_INT < 16) {
             getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                     WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        }
-        else {
+        } else {
             View decorView = getWindow().getDecorView();
             int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
             decorView.setSystemUiVisibility(uiOptions);
         }
     }
 
-    public void fetchUser(HashMap data) {
+    public void fetchUser(String userId) {
+        HashMap data = new HashMap();
+        data.put("userId", userId);
         String url = ip + "api/user";
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(data),
@@ -153,7 +185,7 @@ public class profile extends AppCompatActivity {
                             txtName.setText(name);
                             txtUsername.setText('@' + username);
                             txtTitle.setText(name);
-                            if(!bio.equals("null")){
+                            if (!bio.equals("null")) {
                                 txtBio.setText(bio);
                             } else {
                                 txtBio.setVisibility(View.GONE);
@@ -175,6 +207,7 @@ public class profile extends AppCompatActivity {
         });
         requestQueue.add(jsonObjectRequest);
     }
+
     public static String dateFormatter(String date) {
         OffsetDateTime inst = OffsetDateTime.ofInstant(Instant.parse(date), ZoneId.systemDefault());
 

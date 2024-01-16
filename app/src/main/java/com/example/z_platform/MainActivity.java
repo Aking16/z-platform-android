@@ -53,6 +53,7 @@ public class MainActivity extends AppCompatActivity {
     Button btnSubmitPost;
     ImageView profileImagePost;
     ApiHandler apiHandler;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -102,7 +103,14 @@ public class MainActivity extends AppCompatActivity {
         });
 
         apiHandler.fetchPosts(postList, recyclerView, "");
-        apiHandler.fetchCurrentUser(data, profileImagePost);
+        apiHandler.fetchCurrentUser(userId, result -> {
+            try {
+                String profileImage = result.getString("profileImage");
+                Glide.with(this).load(profileImage).placeholder(R.color.dark_secondary).into(profileImagePost);
+            } catch (JSONException e) {
+                throw new RuntimeException(e);
+            }
+        });
         hideSystemBar();
     }
 

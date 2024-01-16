@@ -42,6 +42,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PosterHolder> 
         holder.username.setText(post.getUsername());
         holder.body.setText(post.getBody());
         holder.createdAt.setText(post.getCreatedAt());
+        holder.commentCount.setText(post.getCommentCount());
         Glide.with(context).load(post.getProfileImage()).placeholder(R.color.dark_secondary).into(holder.profileImage);
 
         holder.layout.setOnClickListener(view -> {
@@ -60,6 +61,18 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PosterHolder> 
 
             context.startActivity(intent);
         });
+
+        holder.profileImage.setOnClickListener(view -> {
+            Intent intent = new Intent(context , profile.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+            Bundle bundle = new Bundle();
+            bundle.putString("userId" , post.getUserId());
+
+            intent.putExtras(bundle);
+
+            context.startActivity(intent);
+        });
     }
 
     @Override
@@ -68,7 +81,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PosterHolder> 
     }
 
     public class PosterHolder extends RecyclerView.ViewHolder {
-        TextView name, username, body, createdAt;
+        TextView name, username, body, createdAt, commentCount;
         ImageView profileImage;
         ConstraintLayout layout;
 
@@ -80,6 +93,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PosterHolder> 
             body = itemView.findViewById(R.id.body);
             createdAt = itemView.findViewById(R.id.createdAt);
             profileImage = itemView.findViewById(R.id.profileImage);
+            commentCount = itemView.findViewById(R.id.txtCommentCount);
             layout = itemView.findViewById(R.id.main_layout);
         }
     }

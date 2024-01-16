@@ -80,7 +80,6 @@ public class PostActivity extends AppCompatActivity {
         HashMap data = new HashMap();
         data.put("userId", userId);
         data.put("postId", postId);
-        data.put("userId", userId);
         commentList = new ArrayList<>();
 
         menuBtn.setOnClickListener(view -> {
@@ -101,7 +100,7 @@ public class PostActivity extends AppCompatActivity {
         });
 
         apiHandler.fetchComments(commentList, recyclerView, postId);
-        apiHandler.fetchCurrentUser(data, profileImageComment);
+        apiHandler.fetchCurrentUser(userId, result -> {});
         hideSystemBar();
     }
 

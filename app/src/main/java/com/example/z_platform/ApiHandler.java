@@ -57,14 +57,18 @@ public class ApiHandler {
                             try {
                                 JSONObject jsonObject = response.getJSONObject(i);
                                 JSONObject user = jsonObject.getJSONObject("user");
+                                JSONArray comments = jsonObject.getJSONArray("comments");
                                 String name = user.getString("name");
+                                String userId = user.getString("id");
                                 String username = user.getString("username");
                                 String profileImage = user.getString("profileImage");
                                 String postId = jsonObject.getString("id");
                                 String body = jsonObject.getString("body");
                                 String createdAt = jsonObject.getString("createdAt");
 
-                                Post post = new Post(postId, body, name, username, profileImage, createdAt);
+                                String commentCount = String.valueOf(comments.length());
+
+                                Post post = new Post(postId, userId, body, name, username, profileImage, createdAt, commentCount);
                                 postList.add(post);
 
                                 PostAdapter adapter = new PostAdapter(mContext, postList);
@@ -139,20 +143,17 @@ public class ApiHandler {
         requestQueue.add(jsonObjectRequest);
     }
 
-    public void fetchCurrentUser(HashMap data, ImageView profileImagePost) {
+    public void fetchCurrentUser(String userId, VolleyCallback<JSONObject> callback) {
         String url = ip + "api/current";
+
+        HashMap data = new HashMap();
+        data.put("userId", userId);
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(data),
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
-                        try {
-                            String profileImage = response.getString("profileImage");
-
-                            Glide.with(mContext).load(profileImage).placeholder(R.color.dark_secondary).into(profileImagePost);
-                        } catch (JSONException e) {
-                            Toast.makeText(mContext, e.toString(), Toast.LENGTH_SHORT).show();
-                        }
+                        callback.onSuccess(response);
                     }
                 }, new Response.ErrorListener() {
             @Override
@@ -258,6 +259,45 @@ public class ApiHandler {
                     @Override
                     public void onResponse(JSONObject response) {
                         Toast.makeText(mContext, "Your profile has been edited!", Toast.LENGTH_SHORT).show();
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(mContext, error.toString(), Toast.LENGTH_SHORT).show();
+                    }
+                }
+        );
+        requestQueue.add(jsonObjectRequest);
+    }
+
+    public void follow(HashMap data, VolleyCallback callback) {
+        String url = ip + "api/follow";
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(data),
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        callback.onSuccess("Success");
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(mContext, error.toString(), Toast.LENGTH_SHORT).show();
+                    }
+                }
+        );
+        requestQueue.add(jsonObjectRequest);
+    }
+    public void unFollow(HashMap data, VolleyCallback callback) {
+        String url = ip + "api/follow";
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.DELETE, url, new JSONObject(data),
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        callback.onSuccess("Success");
                     }
                 },
                 new Response.ErrorListener() {

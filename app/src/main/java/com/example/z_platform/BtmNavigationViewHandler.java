@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Bundle;
 import android.view.MenuItem;
 
 import androidx.annotation.NonNull;
@@ -18,6 +19,8 @@ public class BtmNavigationViewHandler implements NavigationBarView.OnItemSelecte
     }
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+        SharedPreferences sh = mContext.getSharedPreferences("LoginInfo", Context.MODE_PRIVATE);
+        String userId = sh.getString("userId", "");
         int id = item.getItemId();
 
         if (id == R.id.btmNav_home){
@@ -30,6 +33,11 @@ public class BtmNavigationViewHandler implements NavigationBarView.OnItemSelecte
         if (id == R.id.btmNav_profile) {
             Intent intent = new Intent(mContext.getApplicationContext(), profile.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+            Bundle bundle = new Bundle();
+            bundle.putString("userId", userId);
+            intent.putExtras(bundle);
+
             mContext.startActivity(intent);
             ((Activity) mContext).finish();
             return true;
