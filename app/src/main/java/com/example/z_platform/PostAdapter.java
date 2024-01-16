@@ -22,12 +22,10 @@ import java.util.List;
 public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PosterHolder> {
     private Context context;
     private List<Post> postList;
-    private String postId;
 
-    public PostAdapter(Context context, List<Post> posts, String postId){
+    public PostAdapter(Context context, List<Post> posts){
         this.context = context;
         postList = posts;
-        this.postId = postId;
     }
 
     @NonNull
@@ -51,7 +49,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PosterHolder> 
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
             Bundle bundle = new Bundle();
-            bundle.putString("postId" , postId);
+            bundle.putString("postId" , post.getPostId());
             bundle.putString("name" , post.getName());
             bundle.putString("username" , post.getUsername());
             bundle.putString("body" , post.getBody());

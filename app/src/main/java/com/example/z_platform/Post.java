@@ -15,14 +15,19 @@ import java.util.Locale;
 
 public class Post {
 
-    private String body, name, username, profileImage, createdAt;
+    private String postId, body, name, username, profileImage, createdAt;
 
-    public Post(String body, String name, String username, String profileImage, String createdAt) {
+    public Post(String postId, String body, String name, String username, String profileImage, String createdAt) {
+        this.postId = postId;
         this.body = body;
         this.name = name;
         this.username = username;
         this.profileImage = profileImage;
         this.createdAt = createdAt;
+    }
+
+    public String getPostId() {
+        return postId;
     }
 
     public String getBody() {
@@ -36,7 +41,10 @@ public class Post {
     public String getUsername() {
         return '@' + username;
     }
-    public String getProfileImage() {return profileImage;}
+
+    public String getProfileImage() {
+        return profileImage;
+    }
 
     public String getCreatedAt() {
         return dateFormatter(createdAt);

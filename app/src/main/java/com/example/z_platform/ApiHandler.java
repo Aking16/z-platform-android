@@ -64,10 +64,10 @@ public class ApiHandler {
                                 String body = jsonObject.getString("body");
                                 String createdAt = jsonObject.getString("createdAt");
 
-                                Post post = new Post(body, name, username, profileImage, createdAt);
+                                Post post = new Post(postId, body, name, username, profileImage, createdAt);
                                 postList.add(post);
 
-                                PostAdapter adapter = new PostAdapter(mContext, postList, postId);
+                                PostAdapter adapter = new PostAdapter(mContext, postList);
                                 recyclerView.setAdapter(adapter);
                             } catch (JSONException e) {
                                 e.printStackTrace();
@@ -84,7 +84,7 @@ public class ApiHandler {
     }
 
     public void fetchComments(List<Comment> commentList, RecyclerView recyclerView, String postId) {
-        String url = ip + "api/posts?postId=" + postId;
+        String url = ip + "api/comments?postId=" + postId;
 
         JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, url, null,
                 new Response.Listener<JSONArray>() {
@@ -94,21 +94,15 @@ public class ApiHandler {
                             try {
                                 JSONObject jsonObject = response.getJSONObject(i);
                                 JSONObject user = jsonObject.getJSONObject("user");
-                                JSONArray comments = jsonObject.getJSONArray("comments");
 
-                                for (int a = 0; a < comments.length(); a++) {
-                                    JSONObject commentTest = comments.getJSONObject(a);
-                                    String body = commentTest.getString("body");
-                                    String createdAt = commentTest.getString("createdAt");
+                                String body = jsonObject.getString("body");
+                                String createdAt = jsonObject.getString("createdAt");
+                                String name = user.getString("name");
+                                String username = user.getString("username");
+                                String profileImage = user.getString("profileImage");
 
-                                    String name = user.getString("name");
-                                    String username = user.getString("username");
-                                    String profileImage = user.getString("profileImage");
-                                    String commentId = jsonObject.getString("id");
-
-                                    Comment comment = new Comment(body, name, username, profileImage, createdAt);
-                                    commentList.add(comment);
-                                }
+                                Comment comment = new Comment(body, name, username, profileImage, createdAt);
+                                commentList.add(comment);
 
                                 CommentAdapter adapter = new CommentAdapter(mContext, commentList);
                                 recyclerView.setAdapter(adapter);
@@ -126,7 +120,7 @@ public class ApiHandler {
         requestQueue.add(jsonArrayRequest);
     }
 
-    public void postComments(HashMap data) {
+    public void postComments(HashMap data, VolleyCallback callback) {
         String url = ip + "api/comments";
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(data),
@@ -134,6 +128,7 @@ public class ApiHandler {
                     @Override
                     public void onResponse(JSONObject response) {
                         Toast.makeText(mContext, "Comment Added!", Toast.LENGTH_SHORT).show();
+                        callback.onSuccess("Success");
                     }
                 }, new Response.ErrorListener() {
             @Override

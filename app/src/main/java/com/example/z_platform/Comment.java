@@ -25,7 +25,7 @@ public class Comment {
     }
 
     public String getUsername() {
-        return username;
+        return '@' + username;
     }
 
     public String getProfileImage() {
