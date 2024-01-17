@@ -10,7 +10,6 @@ import android.view.MenuItem;
 import androidx.annotation.NonNull;
 
 import com.google.android.material.navigation.NavigationBarView;
-import com.google.android.material.navigation.NavigationView;
 
 public class BtmNavigationViewHandler implements NavigationBarView.OnItemSelectedListener {
     Context mContext;
@@ -29,9 +28,19 @@ public class BtmNavigationViewHandler implements NavigationBarView.OnItemSelecte
             mContext.startActivity(intent);
             ((Activity) mContext).finish();
             return true;
-        }
-        if (id == R.id.btmNav_profile) {
-            Intent intent = new Intent(mContext.getApplicationContext(), profile.class);
+        } else if (id == R.id.btmNav_profile) {
+            Intent intent = new Intent(mContext.getApplicationContext(), ProfileActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+            Bundle bundle = new Bundle();
+            bundle.putString("userId", userId);
+            intent.putExtras(bundle);
+
+            mContext.startActivity(intent);
+            ((Activity) mContext).finish();
+            return true;
+        } else if (id == R.id.btmNav_notification){
+            Intent intent = new Intent(mContext.getApplicationContext(), NotificationActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
             Bundle bundle = new Bundle();

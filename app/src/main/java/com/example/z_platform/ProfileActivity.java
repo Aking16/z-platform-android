@@ -9,11 +9,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -22,18 +19,13 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.bumptech.glide.Glide;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -43,19 +35,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class profile extends AppCompatActivity {
+public class ProfileActivity extends AppCompatActivity {
     DrawerLayout drawerLayout;
     NavigationView navigationView;
     BottomNavigationView bottomNavigationView;
     RecyclerView recyclerView;
-    RequestQueue requestQueue;
     List<Post> postList;
     ImageView profileImage, coverImage;
     TextView txtName, txtUsername, txtBio, txtJoinedAt, txtFollowLength, txtFollowerLength, txtTitle;
     ImageButton btnMenu, btnBack;
     Button btnEditProfile;
-    String ip;
-    Boolean isFollowing = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,12 +67,10 @@ public class profile extends AppCompatActivity {
         btnMenu = findViewById(R.id.menuBtn);
         btnBack = findViewById(R.id.btnBack);
         btnEditProfile = findViewById(R.id.btnEditProfile);
-        ip = getString(R.string.ip);
 
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        requestQueue = VolleySingleton.getmInstance(this).getRequestQueue();
         postList = new ArrayList<>();
         ApiHandler apiHandler = new ApiHandler(getApplicationContext());
         NavigationViewHandler navigationViewHandler = new NavigationViewHandler(this);
@@ -108,24 +95,14 @@ public class profile extends AppCompatActivity {
         bottomNavigationView.getMenu().findItem(R.id.btmNav_profile).setChecked(true);
 
         btnBack.setOnClickListener(view -> {
-            Intent intent = new Intent(profile.this, MainActivity.class);
-            startActivity(intent);
-            finish();
+            if (!userId.equals(shUserId)) {
+                finish();
+            } else {
+                Intent intent = new Intent(ProfileActivity.this, MainActivity.class);
+                startActivity(intent);
+                finish();
+            }
         });
-
-        if (!userId.equals(shUserId)) {
-            btnEditProfile.setText("Follow");
-            btnEditProfile.setOnClickListener(view -> {
-                apiHandler.follow(data, result -> {
-                    btnEditProfile.setText("Following");
-                    btnEditProfile.setBackgroundColor(getColor(R.color.dark_foreground));
-                });
-            });
-        } else {
-            btnEditProfile.setOnClickListener(view -> {
-                EditDialog.display(getSupportFragmentManager());
-            });
-        }
 
         apiHandler.fetchCurrentUser(shUserId, result -> {
             try {
@@ -135,7 +112,7 @@ public class profile extends AppCompatActivity {
                     btnEditProfile.setBackground(getDrawable(R.drawable.btn_white));
                     btnEditProfile.setTextColor(getColor(R.color.dark_primary));
                     btnEditProfile.setOnClickListener(view -> {
-                        apiHandler.unFollow(data, result1 -> {
+                        apiHandler.unFollow(data, r -> {
                             btnEditProfile.setText("Follow");
                             btnEditProfile.setBackground(getDrawable(R.drawable.btn_primary));
                             btnEditProfile.setTextColor(getColor(R.color.dark_foreground));
@@ -147,8 +124,51 @@ public class profile extends AppCompatActivity {
             }
         });
 
+        if (!userId.equals(shUserId)) {
+            btnEditProfile.setText("Follow");
+            btnEditProfile.setOnClickListener(view -> {
+                apiHandler.follow(data, result -> {
+                    btnEditProfile.setText("Following");
+                    btnEditProfile.setBackground(getDrawable(R.drawable.btn_white));
+                    btnEditProfile.setTextColor(getColor(R.color.dark_primary));
+                });
+            });
+        } else {
+            btnEditProfile.setOnClickListener(view -> {
+                EditDialog.display(getSupportFragmentManager());
+            });
+        }
+
+
         apiHandler.fetchPosts(postList, recyclerView, userId);
-        fetchUser(userId);
+        apiHandler.fetchUser(userId, result -> {
+            try {
+                String name = result.getString("name");
+                String username = result.getString("username");
+                String bio = result.getString("bio");
+                JSONArray following = result.getJSONArray("followingIds");
+                String follower = result.getString("followersCount");
+                String createdAt = result.getString("createdAt");
+                String profileImageURL = result.getString("profileImage");
+                String coverImageURL = result.getString("coverImage");
+
+                txtName.setText(name);
+                txtUsername.setText('@' + username);
+                txtTitle.setText(name);
+                if (!bio.equals("null")) {
+                    txtBio.setText(bio);
+                } else {
+                    txtBio.setVisibility(View.GONE);
+                }
+                txtFollowLength.setText(Integer.toString(following.length()));
+                txtFollowerLength.setText(follower);
+                txtJoinedAt.setText("Joined at " + dateFormatter(createdAt));
+                Glide.with(ProfileActivity.this).load(profileImageURL).placeholder(R.color.dark_secondary).into(profileImage);
+                Glide.with(ProfileActivity.this).load(coverImageURL).into(coverImage);
+            } catch (JSONException e) {
+                Toast.makeText(ProfileActivity.this, e.toString(), Toast.LENGTH_SHORT).show();
+            }
+        });
         hideSystemBar();
     }
 
@@ -161,51 +181,6 @@ public class profile extends AppCompatActivity {
             int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
             decorView.setSystemUiVisibility(uiOptions);
         }
-    }
-
-    public void fetchUser(String userId) {
-        HashMap data = new HashMap();
-        data.put("userId", userId);
-        String url = ip + "api/user";
-
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(data),
-                new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        try {
-                            String name = response.getString("name");
-                            String username = response.getString("username");
-                            String bio = response.getString("bio");
-                            JSONArray following = response.getJSONArray("followingIds");
-                            String follower = response.getString("followersCount");
-                            String createdAt = response.getString("createdAt");
-                            String profileImageURL = response.getString("profileImage");
-                            String coverImageURL = response.getString("coverImage");
-
-                            txtName.setText(name);
-                            txtUsername.setText('@' + username);
-                            txtTitle.setText(name);
-                            if (!bio.equals("null")) {
-                                txtBio.setText(bio);
-                            } else {
-                                txtBio.setVisibility(View.GONE);
-                            }
-                            txtFollowLength.setText(Integer.toString(following.length()));
-                            txtFollowerLength.setText(follower);
-                            txtJoinedAt.setText("Joined at " + dateFormatter(createdAt));
-                            Glide.with(profile.this).load(profileImageURL).placeholder(R.color.dark_secondary).into(profileImage);
-                            Glide.with(profile.this).load(coverImageURL).into(coverImage);
-                        } catch (JSONException e) {
-                            Toast.makeText(profile.this, e.toString(), Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Toast.makeText(profile.this, error.toString(), Toast.LENGTH_SHORT).show();
-            }
-        });
-        requestQueue.add(jsonObjectRequest);
     }
 
     public static String dateFormatter(String date) {

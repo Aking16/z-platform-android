@@ -2,8 +2,6 @@ package com.example.z_platform;
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -63,7 +61,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PosterHolder> 
         });
 
         holder.profileImage.setOnClickListener(view -> {
-            Intent intent = new Intent(context , profile.class);
+            Intent intent = new Intent(context , ProfileActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
             Bundle bundle = new Bundle();

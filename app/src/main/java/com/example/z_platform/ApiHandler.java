@@ -164,6 +164,26 @@ public class ApiHandler {
         requestQueue.add(jsonObjectRequest);
     }
 
+    public void fetchUser(String userId, VolleyCallback<JSONObject> callback) {
+        HashMap data = new HashMap();
+        data.put("userId", userId);
+        String url = ip + "api/user";
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, new JSONObject(data),
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        callback.onSuccess(response);
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(mContext, error.toString(), Toast.LENGTH_SHORT).show();
+            }
+        });
+        requestQueue.add(jsonObjectRequest);
+    }
+
     public void postTweet(HashMap data, VolleyCallback callback) {
         String url = ip + "api/posts";
 
@@ -290,10 +310,11 @@ public class ApiHandler {
         );
         requestQueue.add(jsonObjectRequest);
     }
+
     public void unFollow(HashMap data, VolleyCallback callback) {
         String url = ip + "api/follow";
 
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.DELETE, url, new JSONObject(data),
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.PATCH, url, new JSONObject(data),
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
@@ -308,5 +329,23 @@ public class ApiHandler {
                 }
         );
         requestQueue.add(jsonObjectRequest);
+    }
+
+    public void fetchNotification(String userId, VolleyCallback<JSONArray> callback) {
+        String url = ip + "api/notification?userId=" + userId;
+
+        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, url, null,
+                new Response.Listener<JSONArray>() {
+                    @Override
+                    public void onResponse(JSONArray response) {
+                        callback.onSuccess(response);
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(mContext, error.toString(), Toast.LENGTH_SHORT).show();
+            }
+        });
+        requestQueue.add(jsonArrayRequest);
     }
 }
