@@ -12,6 +12,7 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
+import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -26,6 +27,7 @@ import com.google.android.material.navigation.NavigationView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -41,10 +43,13 @@ public class ProfileActivity extends AppCompatActivity {
     BottomNavigationView bottomNavigationView;
     RecyclerView recyclerView;
     List<Post> postList;
-    ImageView profileImage, coverImage;
-    TextView txtName, txtUsername, txtBio, txtJoinedAt, txtFollowLength, txtFollowerLength, txtTitle;
+    ImageView profileImage, coverImage, headerProfileImage;
+    TextView txtName, txtUsername, txtBio, txtJoinedAt, txtFollowLength, txtFollowerLength, txtTitle,
+            headerName, headerUsername, headerFollowLength, headerFollowerLength;
     ImageButton btnMenu, btnBack;
     Button btnEditProfile;
+    ApiHandler apiHandler;
+    String shUserId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,12 +77,12 @@ public class ProfileActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         postList = new ArrayList<>();
-        ApiHandler apiHandler = new ApiHandler(getApplicationContext());
+        apiHandler = new ApiHandler(getApplicationContext());
         NavigationViewHandler navigationViewHandler = new NavigationViewHandler(this);
         BtmNavigationViewHandler btmNavigationViewHandler = new BtmNavigationViewHandler(this);
 
         SharedPreferences sh = getSharedPreferences("LoginInfo", Context.MODE_PRIVATE);
-        String shUserId = sh.getString("userId", "");
+        shUserId = sh.getString("userId", "");
 
         Bundle bundle = getIntent().getExtras();
         String userId = bundle.getString("userId");
@@ -91,6 +96,7 @@ public class ProfileActivity extends AppCompatActivity {
         });
 
         navigationView.setNavigationItemSelectedListener(navigationViewHandler);
+        viewHeader();
         bottomNavigationView.setOnItemSelectedListener(btmNavigationViewHandler);
         bottomNavigationView.getMenu().findItem(R.id.btmNav_profile).setChecked(true);
 
@@ -104,27 +110,28 @@ public class ProfileActivity extends AppCompatActivity {
             }
         });
 
-        apiHandler.fetchCurrentUser(shUserId, result -> {
-            try {
-                JSONArray followingIds = result.getJSONArray("followingIds");
-                if (followingIds.toString().contains(userId)) {
-                    btnEditProfile.setText("Following");
-                    btnEditProfile.setBackground(getDrawable(R.drawable.btn_white));
-                    btnEditProfile.setTextColor(getColor(R.color.dark_primary));
-                    btnEditProfile.setOnClickListener(view -> {
-                        apiHandler.unFollow(data, r -> {
-                            btnEditProfile.setText("Follow");
-                            btnEditProfile.setBackground(getDrawable(R.drawable.btn_primary));
-                            btnEditProfile.setTextColor(getColor(R.color.dark_foreground));
-                        });
-                    });
-                }
-            } catch (JSONException e) {
-                throw new RuntimeException(e);
-            }
-        });
 
         if (!userId.equals(shUserId)) {
+            apiHandler.fetchCurrentUser(shUserId, result -> {
+                try {
+                    JSONArray followingIds = result.getJSONArray("followingIds");
+                    if (followingIds.toString().contains(userId)) {
+                        btnEditProfile.setText("Following");
+                        btnEditProfile.setBackground(getDrawable(R.drawable.btn_white));
+                        btnEditProfile.setTextColor(getColor(R.color.dark_primary));
+                        btnEditProfile.setOnClickListener(view -> {
+                            apiHandler.unFollow(data, r -> {
+                                btnEditProfile.setText("Follow");
+                                btnEditProfile.setBackground(getDrawable(R.drawable.btn_primary));
+                                btnEditProfile.setTextColor(getColor(R.color.dark_foreground));
+                            });
+                        });
+                    }
+                } catch (JSONException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+
             btnEditProfile.setText("Follow");
             btnEditProfile.setOnClickListener(view -> {
                 apiHandler.follow(data, result -> {
@@ -140,7 +147,32 @@ public class ProfileActivity extends AppCompatActivity {
         }
 
 
-        apiHandler.fetchPosts(postList, recyclerView, userId);
+        apiHandler.fetchPosts(userId, result -> {
+            for (int i = 0; i < result.length(); i++) {
+                try {
+                    JSONObject jsonObject = result.getJSONObject(i);
+                    JSONObject user = jsonObject.getJSONObject("user");
+                    JSONArray comments = jsonObject.getJSONArray("comments");
+                    String name = user.getString("name");
+                    String id = user.getString("id");
+                    String username = user.getString("username");
+                    String profileImage = user.getString("profileImage");
+                    String postId = jsonObject.getString("id");
+                    String body = jsonObject.getString("body");
+                    String createdAt = jsonObject.getString("createdAt");
+
+                    String commentCount = String.valueOf(comments.length());
+
+                    Post post = new Post(postId, id, body, name, username, profileImage, createdAt, commentCount);
+                    postList.add(post);
+
+                    PostAdapter adapter = new PostAdapter(this, postList);
+                    recyclerView.setAdapter(adapter);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
         apiHandler.fetchUser(userId, result -> {
             try {
                 String name = result.getString("name");
@@ -169,17 +201,43 @@ public class ProfileActivity extends AppCompatActivity {
                 Toast.makeText(ProfileActivity.this, e.toString(), Toast.LENGTH_SHORT).show();
             }
         });
-        hideSystemBar();
+        changeSystemColor();
     }
 
-    public void hideSystemBar() {
-        if (Build.VERSION.SDK_INT < 16) {
-            getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                    WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        } else {
-            View decorView = getWindow().getDecorView();
-            int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
-            decorView.setSystemUiVisibility(uiOptions);
+    public void viewHeader(){
+        View nav_header = navigationView.getHeaderView(0);
+
+        headerName = nav_header.findViewById(R.id.headerName);
+        headerUsername = nav_header.findViewById(R.id.headerUsername);
+        headerFollowLength = nav_header.findViewById(R.id.headerFollowLength);
+        headerFollowerLength = nav_header.findViewById(R.id.headerFollowerLength);
+        headerProfileImage = nav_header.findViewById(R.id.headerProfileImage);
+
+        apiHandler.fetchCurrentUser(shUserId, result -> {
+            try {
+                String name = result.getString("name");
+                String username = result.getString("username");
+                String profileImage = result.getString("profileImage");
+                JSONArray following = result.getJSONArray("followingIds");
+                String follower = result.getString("followersCount");
+
+                headerName.setText(name);
+                headerUsername.setText('@' + username);
+                headerFollowLength.setText(Integer.toString(following.length()));
+                headerFollowerLength.setText(follower);
+                Glide.with(this).load(profileImage).placeholder(R.color.dark_secondary).into(headerProfileImage);
+            } catch (JSONException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    public void changeSystemColor() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Window window = getWindow();
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            window.setStatusBarColor(getColor(R.color.dark_primary));
+            window.setNavigationBarColor(getColor(R.color.dark_primary));
         }
     }
 

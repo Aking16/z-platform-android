@@ -2,15 +2,23 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/nav_account"
-        android:title="My Account" />
+        android:id="@+id/nav_home"
+        android:icon="@drawable/outline_home_24"
+        android:title="@string/nav_home" />
 
     <item
-        android:id="@+id/nav_settings"
-        android:title="Settings" />
+        android:id="@+id/nav_profile"
+        android:icon="@drawable/outline_person_24"
+        android:title="@string/nav_profile" />
+
+    <item
+        android:id="@+id/nav_notification"
+        android:icon="@drawable/baseline_notifications_none_24"
+        android:title="@string/nav_notification" />
 
     <item
         android:id="@+id/nav_logout"
+        android:icon="@drawable/outline_logout_24"
         android:title="Logout" />
 
 </menu>

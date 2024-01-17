@@ -12,6 +12,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
+import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
@@ -24,13 +25,18 @@ import com.bumptech.glide.Glide;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 public class PostActivity extends AppCompatActivity {
-    TextView txtUsername, txtName, txtCreatedAt, txtBody;
-    ImageView imgprofileImage, profileImageComment;
+    TextView txtUsername, txtName, txtCreatedAt, txtBody, headerName, headerUsername,
+            headerFollowLength, headerFollowerLength;
+    ImageView imgprofileImage, profileImageComment, headerProfileImage;
     Button btnSubmit;
     ImageButton menuBtn, btnBack;
     EditText edtComment;
@@ -40,6 +46,7 @@ public class PostActivity extends AppCompatActivity {
     NavigationView navigationView;
     BottomNavigationView bottomNavigationView;
     List<Comment> commentList;
+    String userId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,7 +74,7 @@ public class PostActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         SharedPreferences sh = getSharedPreferences("LoginInfo", MODE_PRIVATE);
-        String userId = sh.getString("userId", "");
+        userId = sh.getString("userId", "");
 
         Bundle bundle = getIntent().getExtras();
         String postId = bundle.getString("postId");
@@ -91,27 +98,81 @@ public class PostActivity extends AppCompatActivity {
         });
 
         navigationView.setNavigationItemSelectedListener(navigationViewHandler);
+        viewHeader();
         bottomNavigationView.setOnItemSelectedListener(btmNavigationViewHandler);
 
         btnSubmit.setOnClickListener(view -> {
-            data.put("post", edtComment.getText().toString());
-
-            apiHandler.postComments(data, result -> apiHandler.fetchComments(commentList, recyclerView, postId));
+            if (!edtComment.getText().toString().isEmpty()) {
+                data.put("post", edtComment.getText().toString());
+                apiHandler.postComments(data, result -> {
+                });
+            } else {
+                Toast.makeText(this, "Your comment is empty or invalid!", Toast.LENGTH_SHORT).show();
+            }
         });
 
-        apiHandler.fetchComments(commentList, recyclerView, postId);
-        apiHandler.fetchCurrentUser(userId, result -> {});
-        hideSystemBar();
+        apiHandler.fetchComments(postId, r -> {
+            for (int i = 0; i < r.length(); i++) {
+                try {
+                    JSONObject jsonObject = r.getJSONObject(i);
+                    JSONObject user = jsonObject.getJSONObject("user");
+
+                    String body = jsonObject.getString("body");
+                    String createdAt = jsonObject.getString("createdAt");
+                    String name = user.getString("name");
+                    String username = user.getString("username");
+                    String profileImage = user.getString("profileImage");
+
+                    Comment comment = new Comment(body, name, username, profileImage, createdAt);
+                    commentList.add(comment);
+
+                    CommentAdapter adapter = new CommentAdapter(this, commentList);
+                    recyclerView.setAdapter(adapter);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        apiHandler.fetchCurrentUser(userId, result -> {
+        });
+        changeSystemColor();
     }
 
-    public void hideSystemBar() {
-        if (Build.VERSION.SDK_INT < 16) {
-            getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                    WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        } else {
-            View decorView = getWindow().getDecorView();
-            int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
-            decorView.setSystemUiVisibility(uiOptions);
+    public void viewHeader() {
+        View nav_header = navigationView.getHeaderView(0);
+
+        headerName = nav_header.findViewById(R.id.headerName);
+        headerUsername = nav_header.findViewById(R.id.headerUsername);
+        headerFollowLength = nav_header.findViewById(R.id.headerFollowLength);
+        headerFollowerLength = nav_header.findViewById(R.id.headerFollowerLength);
+        headerProfileImage = nav_header.findViewById(R.id.headerProfileImage);
+
+        apiHandler.fetchCurrentUser(userId, result -> {
+            try {
+                String name = result.getString("name");
+                String username = result.getString("username");
+                String profileImage = result.getString("profileImage");
+                JSONArray following = result.getJSONArray("followingIds");
+                String follower = result.getString("followersCount");
+
+                headerName.setText(name);
+                headerUsername.setText('@' + username);
+                headerFollowLength.setText(Integer.toString(following.length()));
+                headerFollowerLength.setText(follower);
+                Glide.with(this).load(profileImage).placeholder(R.color.dark_secondary).into(headerProfileImage);
+            } catch (JSONException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    public void changeSystemColor() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Window window = getWindow();
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            window.setStatusBarColor(getColor(R.color.dark_primary));
+            window.setNavigationBarColor(getColor(R.color.dark_primary));
         }
     }
 }

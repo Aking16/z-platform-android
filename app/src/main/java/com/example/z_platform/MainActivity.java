@@ -14,11 +14,13 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.Request;
@@ -50,8 +52,10 @@ public class MainActivity extends AppCompatActivity {
     EditText edtPost;
     ImageButton btnMenu;
     Button btnSubmitPost;
-    ImageView profileImagePost;
+    ImageView profileImagePost, headerProfileImage;
+    TextView headerName, headerUsername, headerFollowLength, headerFollowerLength;
     ApiHandler apiHandler;
+    String userId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
         BtmNavigationViewHandler btmNavigationViewHandler = new BtmNavigationViewHandler(this);
 
         SharedPreferences sh = getSharedPreferences("LoginInfo", MODE_PRIVATE);
-        String userId = sh.getString("userId", "");
+        userId = sh.getString("userId", "");
 
         HashMap data = new HashMap();
         data.put("userId", userId);
@@ -86,21 +90,27 @@ public class MainActivity extends AppCompatActivity {
         });
 
         navigationView.setNavigationItemSelectedListener(navigationViewHandler);
+        viewHeader();
         bottomNavigationView.setOnItemSelectedListener(btmNavigationViewHandler);
         bottomNavigationView.getMenu().findItem(R.id.btmNav_home).setChecked(true);
 
         btnSubmitPost.setOnClickListener(view -> {
-            data.put("body", edtPost.getText().toString());
+            if (!edtPost.getText().toString().isEmpty()) {
 
-            apiHandler.postTweet(data, new VolleyCallback<String>() {
-                @Override
-                public void onSuccess(String result) {
-                    apiHandler.fetchPosts(postList, recyclerView, "");
-                }
-            });
+                data.put("body", edtPost.getText().toString());
+
+                apiHandler.postTweet(data, new VolleyCallback<String>() {
+                    @Override
+                    public void onSuccess(String result) {
+                        fetchPost("");
+                    }
+                });
+            } else {
+                Toast.makeText(this, "Your post is empty or invalid!", Toast.LENGTH_SHORT).show();
+            }
         });
 
-        apiHandler.fetchPosts(postList, recyclerView, "");
+        fetchPost("");
         apiHandler.fetchCurrentUser(userId, result -> {
             try {
                 String profileImage = result.getString("profileImage");
@@ -109,17 +119,72 @@ public class MainActivity extends AppCompatActivity {
                 throw new RuntimeException(e);
             }
         });
-        hideSystemBar();
+        changeSystemColor();
     }
 
-    public void hideSystemBar() {
-        if (Build.VERSION.SDK_INT < 16) {
-            getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                    WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        } else {
-            View decorView = getWindow().getDecorView();
-            int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
-            decorView.setSystemUiVisibility(uiOptions);
+    public void fetchPost(String userId) {
+        apiHandler.fetchPosts(userId, result -> {
+            for (int i = 0; i < result.length(); i++) {
+                try {
+                    JSONObject jsonObject = result.getJSONObject(i);
+                    JSONObject user = jsonObject.getJSONObject("user");
+                    JSONArray comments = jsonObject.getJSONArray("comments");
+                    String name = user.getString("name");
+                    String id = user.getString("id");
+                    String username = user.getString("username");
+                    String profileImage = user.getString("profileImage");
+                    String postId = jsonObject.getString("id");
+                    String body = jsonObject.getString("body");
+                    String createdAt = jsonObject.getString("createdAt");
+
+                    String commentCount = String.valueOf(comments.length());
+
+                    Post post = new Post(postId, id, body, name, username, profileImage, createdAt, commentCount);
+                    postList.add(post);
+
+                    PostAdapter adapter = new PostAdapter(this, postList);
+                    recyclerView.setAdapter(adapter);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    public void viewHeader(){
+        View nav_header = navigationView.getHeaderView(0);
+
+        headerName = nav_header.findViewById(R.id.headerName);
+        headerUsername = nav_header.findViewById(R.id.headerUsername);
+        headerFollowLength = nav_header.findViewById(R.id.headerFollowLength);
+        headerFollowerLength = nav_header.findViewById(R.id.headerFollowerLength);
+        headerProfileImage = nav_header.findViewById(R.id.headerProfileImage);
+
+        apiHandler.fetchCurrentUser(userId, result -> {
+            try {
+                String name = result.getString("name");
+                String username = result.getString("username");
+                String profileImage = result.getString("profileImage");
+                JSONArray following = result.getJSONArray("followingIds");
+                String follower = result.getString("followersCount");
+
+                headerName.setText(name);
+                headerUsername.setText('@' + username);
+                headerFollowLength.setText(Integer.toString(following.length()));
+                headerFollowerLength.setText(follower);
+                Glide.with(this).load(profileImage).placeholder(R.color.dark_secondary).into(headerProfileImage);
+            } catch (JSONException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    public void changeSystemColor() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Window window = getWindow();
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            window.setStatusBarColor(getColor(R.color.dark_primary));
+            window.setNavigationBarColor(getColor(R.color.dark_primary));
         }
     }
 }

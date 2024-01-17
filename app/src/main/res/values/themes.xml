@@ -7,8 +7,7 @@
         <item name="colorSecondary">@color/dark_secondary</item>
         <item name="android:colorForeground">@color/dark_foreground</item>
 
-        <item name="android:windowBackground">@color/dark_primary</item>
-        <item name="android:textColor">@color/dark_foreground</item>
+        <item name="android:statusBarColor">@color/dark_secondary</item>
     </style>
 
     <style name="Base.Theme.Z_Platform.FullScreenDialog" parent="Theme.MaterialComponents.Light.Dialog">

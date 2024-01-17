@@ -41,7 +41,7 @@ public class ApiHandler {
         ip = context.getString(R.string.ip);
     }
 
-    public void fetchPosts(List<Post> postList, RecyclerView recyclerView, String userId) {
+    public void fetchPosts(String userId, VolleyCallback<JSONArray> callback) {
         String url;
         if (!userId.isEmpty()) {
             url = ip + "api/posts?userId=" + userId;
@@ -53,30 +53,7 @@ public class ApiHandler {
                 new Response.Listener<JSONArray>() {
                     @Override
                     public void onResponse(JSONArray response) {
-                        for (int i = 0; i < response.length(); i++) {
-                            try {
-                                JSONObject jsonObject = response.getJSONObject(i);
-                                JSONObject user = jsonObject.getJSONObject("user");
-                                JSONArray comments = jsonObject.getJSONArray("comments");
-                                String name = user.getString("name");
-                                String userId = user.getString("id");
-                                String username = user.getString("username");
-                                String profileImage = user.getString("profileImage");
-                                String postId = jsonObject.getString("id");
-                                String body = jsonObject.getString("body");
-                                String createdAt = jsonObject.getString("createdAt");
-
-                                String commentCount = String.valueOf(comments.length());
-
-                                Post post = new Post(postId, userId, body, name, username, profileImage, createdAt, commentCount);
-                                postList.add(post);
-
-                                PostAdapter adapter = new PostAdapter(mContext, postList);
-                                recyclerView.setAdapter(adapter);
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            }
-                        }
+                        callback.onSuccess(response);
                     }
                 }, new Response.ErrorListener() {
             @Override
@@ -87,33 +64,14 @@ public class ApiHandler {
         requestQueue.add(jsonArrayRequest);
     }
 
-    public void fetchComments(List<Comment> commentList, RecyclerView recyclerView, String postId) {
+    public void fetchComments(String postId, VolleyCallback<JSONArray> callback) {
         String url = ip + "api/comments?postId=" + postId;
 
         JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, url, null,
                 new Response.Listener<JSONArray>() {
                     @Override
                     public void onResponse(JSONArray response) {
-                        for (int i = 0; i < response.length(); i++) {
-                            try {
-                                JSONObject jsonObject = response.getJSONObject(i);
-                                JSONObject user = jsonObject.getJSONObject("user");
-
-                                String body = jsonObject.getString("body");
-                                String createdAt = jsonObject.getString("createdAt");
-                                String name = user.getString("name");
-                                String username = user.getString("username");
-                                String profileImage = user.getString("profileImage");
-
-                                Comment comment = new Comment(body, name, username, profileImage, createdAt);
-                                commentList.add(comment);
-
-                                CommentAdapter adapter = new CommentAdapter(mContext, commentList);
-                                recyclerView.setAdapter(adapter);
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            }
-                        }
+                        callback.onSuccess(response);
                     }
                 }, new Response.ErrorListener() {
             @Override

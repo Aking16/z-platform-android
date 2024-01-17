@@ -153,6 +153,8 @@
         android:layout_height="match_parent"
         android:layout_gravity="start"
         android:background="@drawable/drawer_style"
+        app:itemIconTint="@color/dark_muted"
+        app:headerLayout="@layout/nav_header"
         app:itemTextColor="@color/dark_foreground"
         app:menu="@menu/drawer_menu" />
 

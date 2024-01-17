@@ -99,6 +99,8 @@
         android:layout_height="match_parent"
         android:layout_gravity="start"
         android:background="@drawable/drawer_style"
+        app:headerLayout="@layout/nav_header"
+        app:itemIconTint="@color/dark_muted"
         app:itemTextColor="@color/dark_foreground"
         app:menu="@menu/drawer_menu" />
 </androidx.drawerlayout.widget.DrawerLayout>
