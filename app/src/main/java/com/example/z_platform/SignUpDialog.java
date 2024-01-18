@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 
@@ -30,9 +31,9 @@ public class SignUpDialog extends DialogFragment {
     private TextInputEditText edtName, edtUsername, edtEmail, edtPassword, edtPasswordConf;
     private Button btnLogin;
     private Context mContext;
+    Activity activity;
     public ApiHandler apiHandler;
     public HashMap data = new HashMap();
-    private String userId;
 
     public static SignUpDialog display(FragmentManager fragmentManager) {
         SignUpDialog editDialog = new SignUpDialog();
@@ -56,7 +57,7 @@ public class SignUpDialog extends DialogFragment {
             int height = ViewGroup.LayoutParams.MATCH_PARENT;
             dialog.getWindow().setLayout(width, height);
             dialog.getWindow().setWindowAnimations(R.style.Base_Theme_Z_Platform_Slide);
-            hideSystemBar();
+            changeSystemColor();
         }
     }
 
@@ -66,6 +67,7 @@ public class SignUpDialog extends DialogFragment {
         View view = inflater.inflate(R.layout.signup_dialog, container, false);
 
         mContext = getContext();
+        activity = (Activity) mContext;
 
         toolbar = view.findViewById(R.id.toolbar);
         btnLogin = view.findViewById(R.id.btnLogin);
@@ -136,7 +138,6 @@ public class SignUpDialog extends DialogFragment {
                 apiHandler.register(data, new VolleyCallback<String>() {
                     @Override
                     public void onSuccess(String result) {
-                        Activity activity = (Activity) mContext;
                         Intent intent = new Intent(activity.getApplicationContext(), MainActivity.class);
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         activity.finish();
@@ -148,14 +149,12 @@ public class SignUpDialog extends DialogFragment {
         });
     }
 
-    public void hideSystemBar() {
-        if (Build.VERSION.SDK_INT < 16) {
-            dialog.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                    WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        } else {
-            View decorView = dialog.getWindow().getDecorView();
-            int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
-            decorView.setSystemUiVisibility(uiOptions);
+    public void changeSystemColor() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Window window = activity.getWindow();
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            window.setStatusBarColor(activity.getColor(R.color.dark_primary));
+            window.setNavigationBarColor(activity.getColor(R.color.dark_primary));
         }
     }
 
