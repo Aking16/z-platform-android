@@ -117,7 +117,7 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 My Discord - akingg
 
-Project Link: https://github.com/Aking16/z-platform
+Project Link: https://github.com/Aking16/z-platform-android
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
